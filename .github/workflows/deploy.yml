@@ -1,0 +1,76 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'push' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci --omit=dev
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+        env:
+          VITE_API_URL: ${{ secrets.API_URL }}
+
+      - name: Run database migrations
+        working-directory: backend
+        run: node src/run-migrations.js
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Deployment summary
+        run: |
+          echo "## 🚀 Deployment Ready" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Backend:** Node.js ${{ matrix.node-version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Frontend:** Built to \`dist/\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Database:** Migrations applied" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "Configure your deployment platform (Render, Railway, Vercel, etc.) with:" >> $GITHUB_STEP_SUMMARY
+          echo "- \`DATABASE_URL\` — PostgreSQL connection string" >> $GITHUB_STEP_SUMMARY
+          echo "- \`JWT_SECRET\` — Production secret key" >> $GITHUB_STEP_SUMMARY
+          echo "- \`PAYMENT_GATEWAY\` — PAYSTACK or FLUTTERWAVE" >> $GITHUB_STEP_SUMMARY
+          echo "- \`PAYSTACK_SECRET_KEY\` — Your Paystack secret key" >> $GITHUB_STEP_SUMMARY
+          echo "- \`PAYSTACK_PUBLIC_KEY\` — Your Paystack public key" >> $GITHUB_STEP_SUMMARY
+
+  notify:
+    name: Notify
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: always()
+
+    steps:
+      - name: Deployment status
+        run: |
+          if [ "${{ needs.deploy.result }}" = "success" ]; then
+            echo "✅ Deployment completed successfully"
+          else
+            echo "❌ Deployment failed"
+            exit 1
+          fi
