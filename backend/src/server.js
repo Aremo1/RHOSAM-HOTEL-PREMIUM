@@ -308,6 +308,16 @@ app.use(compression());
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 
+// Health check endpoint for Render deployment
+app.get("/api/health", async (req, res) => {
+  try {
+    await pool.query("SELECT 1");
+    res.json({ status: "ok", timestamp: new Date().toISOString(), database: "connected" });
+  } catch (e) {
+    res.status(503).json({ status: "error", database: "disconnected", error: e.message });
+  }
+});
+
 const auth = (req, res, next) => {
   const h = req.headers.authorization || "";
   const t = h.startsWith("Bearer ") ? h.slice(7) : null;
