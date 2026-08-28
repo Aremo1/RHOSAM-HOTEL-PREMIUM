@@ -26,6 +26,81 @@ const pool = new Pool({
 
 pool.on("error", (err) => console.error("[DB] Pool error:", err.message));
 
+// ── Payment Gateway Setup (Paystack / Flutterwave) ─────────────
+const PAYMENT_GATEWAY = (process.env.PAYMENT_GATEWAY || "INTERNAL").toUpperCase();
+const paystackSecretKey = process.env.PAYSTACK_SECRET_KEY || "";
+const paystackPublicKey = process.env.PAYSTACK_PUBLIC_KEY || "";
+const flutterwaveSecretKey = process.env.FLUTTERWAVE_SECRET_KEY || "";
+const flutterwavePublicKey = process.env.FLUTTERWAVE_PUBLIC_KEY || "";
+const paymentWebhookSecret = process.env.PAYMENT_WEBHOOK_SECRET || "";
+
+// Paystack API helpers
+const paystack = {
+  async initializeTransaction({ email, amount, reference, metadata = {} }) {
+    const res = await fetch("https://api.paystack.co/transaction/initialize", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${paystackSecretKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ email, amount: Math.round(amount * 100), reference, currency: "NGN", metadata }),
+    });
+    const data = await res.json();
+    if (!data.status) throw new Error(data.message || "Paystack initialization failed");
+    return data.data; // { authorization_url, access_code, reference }
+  },
+  async verifyTransaction(reference) {
+    const res = await fetch(`https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`, {
+      headers: { Authorization: `Bearer ${paystackSecretKey}` },
+    });
+    const data = await res.json();
+    if (!data.status) throw new Error(data.message || "Paystack verification failed");
+    return data.data; // { status, amount, currency, reference, gateway_response, ... }
+  },
+  verifyWebhook(signature, body) {
+    if (!paymentWebhookSecret) return true; // skip if no secret configured
+    const crypto = require("crypto");
+    const hash = crypto.createHmac("sha512", paymentWebhookSecret).update(body).digest("hex");
+    return hash === signature;
+  },
+};
+
+// Flutterwave API helpers
+const flutterwave = {
+  async initializeTransaction({ email, amount, reference, redirectUrl }) {
+    const res = await fetch("https://api.flutterwave.com/v3/payments", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${flutterwaveSecretKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        tx_ref: reference,
+        amount,
+        currency: "NGN",
+        redirect_url: redirectUrl || `${process.env.FRONTEND_URL || "http://localhost:5173"}/guest`,
+        customer: { email },
+        meta: { source: "rhosam_hotel" },
+      }),
+    });
+    const data = await res.json();
+    if (data.status !== "success") throw new Error(data.message || "Flutterwave initialization failed");
+    return data.data; // { link, ... }
+  },
+  async verifyTransaction(transactionId) {
+    const res = await fetch(`https://api.flutterwave.com/v3/transactions/${transactionId}/verify`, {
+      headers: { Authorization: `Bearer ${flutterwaveSecretKey}` },
+    });
+    const data = await res.json();
+    if (data.status !== "success") throw new Error(data.message || "Flutterwave verification failed");
+    return data.data; // { status, amount, tx_ref, id, ... }
+  },
+  verifyWebhook(signature, body) {
+    if (!paymentWebhookSecret) return true;
+    const crypto = require("crypto");
+    const hash = crypto.createHmac("sha256", paymentWebhookSecret).update(body).digest("hex");
+    return hash === signature;
+  },
+};
+
+function getActiveGateway() {
+  return PAYMENT_GATEWAY;
+}
+
 // ── WebSocket Server for Real-Time Notifications ──────────────
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server, path: "/ws" });
@@ -4090,6 +4165,160 @@ app.get("/api/guest/folio", guestAuth, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+// Guest: initialize payment (card/transfer/online)
+app.post("/api/guest/payments/initialize", guestAuth, async (req, res, next) => {
+  try {
+    const { amount, method } = req.body;
+    if (!amount || Number(amount) <= 0) return res.status(400).json({ message: "Valid amount required." });
+
+    // Get folio
+    const { rows: folios } = await pool.query("SELECT * FROM folios WHERE reservation_id=$1 AND status='OPEN'", [req.guest.reservationId]);
+    if (!folios[0]) return res.status(404).json({ message: "No open folio found." });
+    const folio = folios[0];
+
+    // Get guest email
+    const { rows: guests } = await pool.query("SELECT email, first_name, last_name FROM guests WHERE id=$1", [req.guest.guestId]);
+    const guestEmail = guests[0]?.email || "guest@rhosam.com";
+    const guestName = guests[0] ? `${guests[0].first_name} ${guests[0].last_name}` : "Guest";
+
+    const reference = `RH-FOLIO-${folio.id}-${Date.now()}`;
+    const activeGateway = getActiveGateway();
+
+    if (activeGateway === "PAYSTACK" && paystackSecretKey) {
+      const result = await paystack.initializeTransaction({
+        email: guestEmail,
+        amount: Number(amount),
+        reference,
+        metadata: { folio_id: folio.id, guest_id: req.guest.guestId, guest_name: guestName, reservation_id: req.guest.reservationId },
+      });
+      // Record pending payment
+      await pool.query(
+        `INSERT INTO folio_items(folio_id, description, amount, category, posted_by)
+         VALUES($1, $2, $3, 'PAYMENT', NULL) RETURNING *`,
+        [folio.id, `Online Payment (${activeGateway}) - ${reference}`, 0] // placeholder, updated on verify
+      );
+      res.json({ gateway: "PAYSTACK", reference, authorizationUrl: result.authorization_url, accessCode: result.access_code, amount: Number(amount) });
+    } else if (activeGateway === "FLUTTERWAVE" && flutterwaveSecretKey) {
+      const result = await flutterwave.initializeTransaction({
+        email: guestEmail,
+        amount: Number(amount),
+        reference,
+        redirectUrl: `${process.env.FRONTEND_URL || "http://localhost:5173"}/guest`,
+      });
+      await pool.query(
+        `INSERT INTO folio_items(folio_id, description, amount, category, posted_by)
+         VALUES($1, $2, $3, 'PAYMENT', NULL) RETURNING *`,
+        [folio.id, `Online Payment (${activeGateway}) - ${reference}`, 0]
+      );
+      res.json({ gateway: "FLUTTERWAVE", reference, authorizationUrl: result.link, amount: Number(amount) });
+    } else {
+      // No gateway configured — record as INTERNAL/CASH payment
+      await pool.query(
+        `INSERT INTO folio_items(folio_id, description, amount, category, posted_by)
+         VALUES($1, $2, $3, 'PAYMENT', NULL) RETURNING *`,
+        [folio.id, `Payment (CASH)`, -Number(amount)]
+      );
+      await pool.query(
+        `UPDATE folios SET total_payments=total_payments+$1, balance=balance-$1 WHERE id=$2`,
+        [Number(amount), folio.id]
+      );
+      res.json({ gateway: "INTERNAL", reference, authorizationUrl: null, amount: Number(amount), message: "Payment recorded (no gateway configured)." });
+    }
+  } catch (e) { next(e); }
+});
+
+// Guest: verify payment after gateway redirect
+app.post("/api/guest/payments/verify", guestAuth, async (req, res, next) => {
+  try {
+    const { reference, gateway } = req.body;
+    if (!reference) return res.status(400).json({ message: "Reference required." });
+
+    // Get folio
+    const { rows: folios } = await pool.query("SELECT * FROM folios WHERE reservation_id=$1 AND status='OPEN'", [req.guest.reservationId]);
+    if (!folios[0]) return res.status(404).json({ message: "No open folio found." });
+    const folio = folios[0];
+
+    let verified = false;
+    let gatewayData = {};
+    const activeGateway = gateway || getActiveGateway();
+
+    if (activeGateway === "PAYSTACK" && paystackSecretKey) {
+      try {
+        const result = await paystack.verifyTransaction(reference);
+        verified = result.status === "success";
+        gatewayData = result;
+      } catch (err) {
+        console.error("[PAYSTACK] Verification failed:", err.message);
+        gatewayData = { error: err.message };
+      }
+    } else if (activeGateway === "FLUTTERWAVE" && flutterwaveSecretKey) {
+      try {
+        const result = await flutterwave.verifyTransaction(reference);
+        verified = result.status === "successful";
+        gatewayData = result;
+      } catch (err) {
+        console.error("[FLUTTERWAVE] Verification failed:", err.message);
+        gatewayData = { error: err.message };
+      }
+    } else {
+      // No gateway — auto-verify
+      verified = true;
+      gatewayData = { note: "No payment gateway configured — auto-verified" };
+    }
+
+    if (verified) {
+      // Extract amount from gateway response
+      let paidAmount = 0;
+      if (activeGateway === "PAYSTACK" && gatewayData.amount) {
+        paidAmount = gatewayData.amount / 100; // kobo to naira
+      } else if (activeGateway === "FLUTTERWAVE" && gatewayData.amount) {
+        paidAmount = gatewayData.amount;
+      } else {
+        // Try to find the pending payment amount from folio items
+        const { rows: pending } = await pool.query(
+          `SELECT id FROM folio_items WHERE folio_id=$1 AND category='PAYMENT' AND description LIKE $2 AND amount=0 ORDER BY created_at DESC LIMIT 1`,
+          [folio.id, `%${reference}%`]
+        );
+        if (pending[0]) {
+          // We don't know the amount — use the folio balance
+          paidAmount = Number(folio.balance);
+        }
+      }
+
+      if (paidAmount > 0) {
+        // Update the placeholder payment item
+        await pool.query(
+          `UPDATE folio_items SET amount = $1, description = $2 WHERE folio_id = $3 AND category = 'PAYMENT' AND description LIKE $4 AND amount = 0`,
+          [-paidAmount, `Online Payment (${activeGateway}) - ${reference}`, folio.id, `%${reference}%`]
+        );
+        // Update folio totals
+        await pool.query(
+          `UPDATE folios SET total_payments = total_payments + $1, balance = balance - $1 WHERE id = $2`,
+          [paidAmount, folio.id]
+        );
+      }
+
+      res.json({ verified: true, amount: paidAmount, reference, gateway: activeGateway });
+    } else {
+      res.json({ verified: false, reference, gateway: activeGateway, gatewayResponse: gatewayData });
+    }
+  } catch (e) { next(e); }
+});
+
+// Guest: payment history
+app.get("/api/guest/payments", guestAuth, async (req, res, next) => {
+  try {
+    const { rows: folios } = await pool.query("SELECT id FROM folios WHERE reservation_id=$1", [req.guest.reservationId]);
+    if (!folios[0]) return res.json([]);
+    const { rows } = await pool.query(
+      `SELECT id, description, amount, category, created_at
+       FROM folio_items WHERE folio_id=$1 AND category='PAYMENT' ORDER BY created_at DESC`,
+      [folios[0].id]
+    );
+    res.json(rows);
+  } catch (e) { next(e); }
+});
+
 // Guest: get hotel info / services
 app.get("/api/guest/hotel-info", guestAuth, async (req, res, next) => {
   res.json({
@@ -4648,6 +4877,112 @@ app.get("/api/exchange-rates", auth, async (req, res, next) => {
     }
     res.json({ baseCurrency: config.baseCurrency || "NGN", rates });
   } catch (e) { next(e); }
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// PAYMENT WEBHOOKS
+// ═══════════════════════════════════════════════════════════════════
+
+// Paystack Webhook
+app.post("/api/webhooks/paystack", async (req, res) => {
+  try {
+    const signature = req.headers["x-paystack-signature"] || "";
+    const body = JSON.stringify(req.body);
+
+    if (!paystack.verifyWebhook(signature, body)) {
+      console.error("[WEBHOOK] Invalid Paystack signature");
+      return res.status(400).json({ message: "Invalid signature" });
+    }
+
+    const event = req.body;
+    if (event.event === "charge.success") {
+      const { reference, amount, status, gateway_response, card } = event.data || {};
+      if (reference) {
+        // Extract folio_id from reference format RH-FOLIO-{folioId}-...
+        const folioMatch = reference.match(/^RH-FOLIO-(\d+)-/);
+        const folioId = folioMatch ? Number(folioMatch[1]) : null;
+        if (folioId) {
+          const paidAmount = amount / 100; // kobo to naira
+          // Check if already processed
+          const { rows: existing } = await pool.query(
+            `SELECT id FROM folio_items WHERE folio_id=$1 AND category='PAYMENT' AND description LIKE $2 AND amount != 0`,
+            [folioId, `%${reference}%`]
+          );
+          if (!existing[0]) {
+            await pool.query(
+              `UPDATE folio_items SET amount=$1, description=$2 WHERE folio_id=$3 AND category='PAYMENT' AND description LIKE $4 AND amount=0`,
+              [-paidAmount, `Online Payment (PAYSTACK) - ${reference}`, folioId, `%${reference}%`]
+            );
+            await pool.query(
+              `UPDATE folios SET total_payments=total_payments+$1, balance=balance-$1 WHERE id=$2`,
+              [paidAmount, folioId]
+            );
+            console.log(`[WEBHOOK] Paystack payment verified: ${reference} = ₦${paidAmount}`);
+          }
+        }
+      }
+    }
+    res.json({ received: true });
+  } catch (e) {
+    console.error("[WEBHOOK] Paystack error:", e.message);
+    res.status(500).json({ message: "Webhook processing failed" });
+  }
+});
+
+// Flutterwave Webhook
+app.post("/api/webhooks/flutterwave", async (req, res) => {
+  try {
+    const signature = req.headers["verif-hash"] || "";
+    const body = JSON.stringify(req.body);
+
+    if (!flutterwave.verifyWebhook(signature, body)) {
+      console.error("[WEBHOOK] Invalid Flutterwave signature");
+      return res.status(400).json({ message: "Invalid signature" });
+    }
+
+    const event = req.body;
+    if (event.event === "charge.completed" && event.data?.status === "successful") {
+      const { tx_ref, amount, id: fwId, card, flw_ref } = event.data;
+      if (tx_ref) {
+        const folioMatch = tx_ref.match(/^RH-FOLIO-(\d+)-/);
+        const folioId = folioMatch ? Number(folioMatch[1]) : null;
+        if (folioId) {
+          const paidAmount = amount;
+          const { rows: existing } = await pool.query(
+            `SELECT id FROM folio_items WHERE folio_id=$1 AND category='PAYMENT' AND description LIKE $2 AND amount != 0`,
+            [folioId, `%${tx_ref}%`]
+          );
+          if (!existing[0]) {
+            await pool.query(
+              `UPDATE folio_items SET amount=$1, description=$2 WHERE folio_id=$3 AND category='PAYMENT' AND description LIKE $4 AND amount=0`,
+              [-paidAmount, `Online Payment (FLUTTERWAVE) - ${tx_ref}`, folioId, `%${tx_ref}%`]
+            );
+            await pool.query(
+              `UPDATE folios SET total_payments=total_payments+$1, balance=balance-$1 WHERE id=$2`,
+              [paidAmount, folioId]
+            );
+            console.log(`[WEBHOOK] Flutterwave payment verified: ${tx_ref} = ₦${paidAmount}`);
+          }
+        }
+      }
+    }
+    res.json({ received: true });
+  } catch (e) {
+    console.error("[WEBHOOK] Flutterwave error:", e.message);
+    res.status(500).json({ message: "Webhook processing failed" });
+  }
+});
+
+// Payment gateway status (for guest app)
+app.get("/api/guest/payments/gateway-status", guestAuth, async (req, res) => {
+  const active = getActiveGateway();
+  res.json({
+    gateway: active,
+    hasPaystack: !!(active === "PAYSTACK" && paystackSecretKey),
+    hasFlutterwave: !!(active === "FLUTTERWAVE" && flutterwaveSecretKey),
+    paystackPublicKey: paystackPublicKey || null,
+    flutterwavePublicKey: flutterwavePublicKey || null,
+  });
 });
 
 // ═══════════════════════════════════════════════════════════════════
