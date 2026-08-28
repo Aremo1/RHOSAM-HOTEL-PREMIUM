@@ -1335,6 +1335,24 @@ app.patch("/api/reservations/:id/status", auth, allow("ADMIN", "MANAGER", "FRONT
 
     if (status === "CHECKED_IN" && resv.room_id) {
       await client.query("UPDATE rooms SET status='OCCUPIED' WHERE id=$1", [resv.room_id]);
+      // Create folio for the reservation if not exists
+      const { rows: existingFolio } = await client.query("SELECT id FROM folios WHERE reservation_id=$1", [id]);
+      if (!existingFolio[0]) {
+        const { rows: [folio] } = await client.query(
+          "INSERT INTO folios(reservation_id, guest_id, status) VALUES($1, $2, 'OPEN') RETURNING *",
+          [id, resv.guest_id]
+        );
+        // Add room charge to folio
+        if (resv.total_amount > 0) {
+          const nights = Math.ceil((new Date(resv.check_out) - new Date(resv.check_in)) / 86400000);
+          const nightlyRate = nights > 0 ? Number(resv.total_amount) / nights : Number(resv.total_amount);
+          await client.query(
+            "INSERT INTO folio_items(folio_id, description, amount, category) VALUES($1, $2, $3, 'ROOM')",
+            [folio.id, `Room charge - ${nights} night(s) @ ₦${nightlyRate.toLocaleString()}/night`, Number(resv.total_amount)]
+          );
+          await client.query("UPDATE folios SET total_charges=$1, balance=$1 WHERE id=$2", [Number(resv.total_amount), folio.id]);
+        }
+      }
     } else if (status === "CHECKED_OUT" && resv.room_id) {
       await client.query("UPDATE rooms SET status='DIRTY' WHERE id=$1", [resv.room_id]);
       await client.query("UPDATE guests SET total_spent = total_spent + $1 WHERE id = $2", [resv.total_amount, resv.guest_id]);
@@ -1541,6 +1559,19 @@ app.post("/api/restaurant/orders", auth, allow("ADMIN", "MANAGER", "RESTAURANT",
         "INSERT INTO restaurant_order_items(order_id,menu_item_id,quantity,unit_price,subtotal,special_instructions) VALUES($1,$2,$3,$4,$5,$6)",
         [order.id, item.menuItemId, item.quantity, item.unitPrice, item.subtotal, item.specialInstructions || null]
       );
+    }
+
+    // Add restaurant charge to guest folio if reservation provided
+    if (reservationId) {
+      const { rows: folios } = await client.query("SELECT id FROM folios WHERE reservation_id=$1", [reservationId]);
+      if (folios[0]) {
+        const itemList = resolvedItems.map(i => `${i.quantity}x item #${i.menuItemId}`).join(', ');
+        await client.query(
+          "INSERT INTO folio_items(folio_id, description, amount, category) VALUES($1, $2, $3, 'RESTAURANT')",
+          [folios[0].id, `Restaurant Order #${order.id} - ${itemList}`, totalAmount]
+        );
+        await client.query("UPDATE folios SET total_charges=total_charges+$1, balance=balance+$1 WHERE id=$2", [totalAmount, folios[0].id]);
+      }
     }
 
     await client.query("COMMIT");
@@ -3799,6 +3830,26 @@ app.post("/api/guest/check-in", guestAuth, async (req, res, next) => {
     if (rows[0].status !== "CONFIRMED") { await client.query("ROLLBACK"); client.release(); return res.status(400).json({ message: `Cannot check in. Current status: ${rows[0].status}` }); }
     await client.query("UPDATE reservations SET status='CHECKED_IN', updated_at=NOW() WHERE id=$1", [resvId]);
     if (rows[0].room_id) await client.query("UPDATE rooms SET status='OCCUPIED' WHERE id=$1", [rows[0].room_id]);
+
+    // Create folio for the reservation if not exists
+    const { rows: existingFolio } = await client.query("SELECT id FROM folios WHERE reservation_id=$1", [resvId]);
+    if (!existingFolio[0]) {
+      const { rows: [folio] } = await client.query(
+        "INSERT INTO folios(reservation_id, guest_id, status) VALUES($1, $2, 'OPEN') RETURNING *",
+        [resvId, rows[0].guest_id]
+      );
+      // Add room charge to folio
+      if (rows[0].total_amount > 0) {
+        const nights = Math.ceil((new Date(rows[0].check_out) - new Date(rows[0].check_in)) / 86400000);
+        const nightlyRate = nights > 0 ? Number(rows[0].total_amount) / nights : Number(rows[0].total_amount);
+        await client.query(
+          "INSERT INTO folio_items(folio_id, description, amount, category) VALUES($1, $2, $3, 'ROOM')",
+          [folio.id, `Room charge - ${nights} night(s) @ ₦${nightlyRate.toLocaleString()}/night`, Number(rows[0].total_amount)]
+        );
+        await client.query("UPDATE folios SET total_charges=$1, balance=$1 WHERE id=$2", [Number(rows[0].total_amount), folio.id]);
+      }
+    }
+
     await audit(pool, null, "GUEST_CHECK_IN", "RESERVATION", resvId, {}, req);
     await client.query("COMMIT");
 
@@ -3883,6 +3934,18 @@ app.post("/api/guest/room-service", guestAuth, async (req, res, next) => {
         [order.id, item.menuItemId, item.quantity, item.unitPrice, item.subtotal, item.specialInstructions || null]
       );
     }
+
+    // Add room service charge to guest folio
+    const { rows: folios } = await client.query("SELECT id FROM folios WHERE reservation_id=$1", [req.guest.reservationId]);
+    if (folios[0]) {
+      const itemList = resolvedItems.map(i => `${i.quantity}x item #${i.menuItemId}`).join(', ');
+      await client.query(
+        "INSERT INTO folio_items(folio_id, description, amount, category) VALUES($1, $2, $3, 'ROOM_SERVICE')",
+        [folios[0].id, `Room Service Order #${order.id} - ${itemList}`, totalAmount]
+      );
+      await client.query("UPDATE folios SET total_charges=total_charges+$1, balance=balance+$1 WHERE id=$2", [totalAmount, folios[0].id]);
+    }
+
     await client.query("COMMIT");
 
     // Notify restaurant staff
