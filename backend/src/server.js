@@ -4175,7 +4175,7 @@ app.post("/api/guest/digital-key/activate", guestAuth, async (req, res, next) =>
 
 app.post("/api/guest/digital-key/unlock", guestAuth, async (req, res, next) => {
   try {
-    const { keyCode } = req.body;
+    const { keyCode } = req.body || {};
     const { rows } = await pool.query(
       `SELECT dk.*, rm.number AS room_number FROM digital_keys dk
        LEFT JOIN rooms rm ON rm.id = dk.room_id
@@ -4255,15 +4255,30 @@ app.patch("/api/guest/room-controls", guestAuth, async (req, res, next) => {
     );
     if (!resv.length) return res.status(404).json({ message: "No active reservation found." });
 
+    // Support both camelCase (frontend) and snake_case (DB) field names
+    const camelToSnake = {
+      lightsMain: "lights_main", lightsBedroom: "lights_bedroom",
+      lightsBathroom: "lights_bathroom", moodLighting: "lights_mood",
+      acOn: "ac_enabled", acEnabled: "ac_enabled",
+      acTemp: "ac_temperature", acTemperature: "ac_temperature",
+      acMode: "ac_mode", acFan: "ac_fan_speed", acFanSpeed: "ac_fan_speed",
+      tvOn: "tv_on", tvChannel: "tv_channel", tvVolume: "tv_volume",
+      curtainsOpen: "curtains_open", doNotDisturb: "do_not_disturb"
+    };
+    // Normalize request body keys to snake_case
+    const normalized = {};
+    for (const [k, v] of Object.entries(req.body)) {
+      normalized[camelToSnake[k] || k] = v;
+    }
     const allowed = ["lights_main","lights_bedroom","lights_bathroom","lights_mood","ac_enabled","ac_temperature","ac_mode","ac_fan_speed","tv_on","tv_channel","tv_volume","curtains_open","do_not_disturb"];
     const updates = [];
     const params = [];
     let idx = 1;
 
     for (const key of allowed) {
-      if (req.body[key] !== undefined) {
+      if (normalized[key] !== undefined) {
         updates.push(`${key}=$${idx++}`);
-        params.push(req.body[key]);
+        params.push(normalized[key]);
       }
     }
     if (!updates.length) return res.status(400).json({ message: "No valid fields to update." });
