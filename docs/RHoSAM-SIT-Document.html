@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>RHoSAM Hotel — System Integration Testing (SIT) Document</title>
+<style>
+  @page { size: A4; margin: 20mm; }
+  @media print { .no-print { display: none; } body { font-size: 11pt; } .page-break { page-break-before: always; } }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; line-height: 1.6; color: #1e293b; max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+  h1 { font-size: 26px; color: #0f172a; border-bottom: 3px solid #3b82f6; padding-bottom: 10px; margin: 30px 0 20px; }
+  h2 { font-size: 20px; color: #1e3a5f; margin: 25px 0 15px; border-left: 4px solid #3b82f6; padding-left: 12px; }
+  h3 { font-size: 16px; color: #334155; margin: 20px 0 10px; }
+  p { margin: 8px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 12px; }
+  th { background: #1e3a5f; color: white; padding: 8px 10px; text-align: left; font-weight: 600; }
+  td { padding: 7px 10px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+  tr:nth-child(even) { background: #f8fafc; }
+  code { background: #f1f5f9; padding: 2px 6px; border-radius: 3px; font-size: 11px; font-family: Consolas, monospace; }
+  pre { background: #0f172a; color: #e2e8f0; padding: 14px; border-radius: 6px; font-size: 11px; margin: 10px 0; overflow-x: auto; }
+  .cover { text-align: center; padding: 60px 20px; background: linear-gradient(135deg, #1e3a5f, #3b82f6); color: white; border-radius: 12px; margin: 40px 0; }
+  .cover h1 { color: white; border: none; font-size: 32px; }
+  .pass { color: #16a34a; font-weight: 600; }
+  .fail { color: #dc2626; font-weight: 600; }
+  .block { color: #d97706; font-weight: 600; }
+  .na { color: #6b7280; font-weight: 600; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+  .badge-high { background: #fef2f2; color: #991b1b; }
+  .badge-med { background: #fef3c7; color: #92400e; }
+  .badge-low { background: #dbeafe; color: #1e40af; }
+  .toc { background: #f8fafc; padding: 20px 30px; border-radius: 8px; margin: 20px 0; }
+  .toc ul { list-style: none; }
+  .toc li { padding: 3px 0; }
+  .section { margin: 20px 0; }
+  .note { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 10px 14px; border-radius: 0 6px 6px 0; margin: 12px 0; font-size: 12px; }
+  .footer { text-align: center; color: #94a3b8; font-size: 11px; margin-top: 40px; padding-top: 15px; border-top: 1px solid #e2e8f0; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div style="font-size:42px;margin-bottom:15px;">🧪</div>
+  <h1>System Integration Testing (SIT)</h1>
+  <p style="font-size:18px;color:#93c5fd;">RHoSAM Hotel & Suites — Premium Management Platform</p>
+  <p style="margin-top:15px;">Version 2.0 — August 2026</p>
+  <p style="margin-top:20px;font-size:12px;">Confidential — For QA Team Use Only</p>
+</div>
+
+<div class="toc">
+  <h2>Table of Contents</h2>
+  <ul>
+    <li><strong>1.</strong> Document Overview</li>
+    <li><strong>2.</strong> Test Environment</li>
+    <li><strong>3.</strong> Integration Points</li>
+    <li><strong>4.</strong> Test Data Strategy</li>
+    <li><strong>5.</strong> SIT Test Cases — Authentication & Access</li>
+    <li><strong>6.</strong> SIT Test Cases — Reservations & Front Desk</li>
+    <li><strong>7.</strong> SIT Test Cases — Room Management</li>
+    <li><strong>8.</strong> SIT Test Cases — Guest CRM</li>
+    <li><strong>9.</strong> SIT Test Cases — Housekeeping & Maintenance</li>
+    <li><strong>10.</strong> SIT Test Cases — F&B and Room Service</li>
+    <li><strong>11.</strong> SIT Test Cases — Spa & Wellness</li>
+    <li><strong>12.</strong> SIT Test Cases — Finance & Payments</li>
+    <li><strong>13.</strong> SIT Test Cases — Multi-Currency</li>
+    <li><strong>14.</strong> SIT Test Cases — Shift Scheduling</li>
+    <li><strong>15.</strong> SIT Test Cases — Shift Swaps</li>
+    <li><strong>16.</strong> SIT Test Cases — Conflict Detection</li>
+    <li><strong>17.</strong> SIT Test Cases — Labor Cost Optimization</li>
+    <li><strong>18.</strong> SIT Test Cases — Guest Mobile App</li>
+    <li><strong>19.</strong> SIT Test Cases — Digital Key & Room Controls</li>
+    <li><strong>20.</strong> SIT Test Cases — Local Experiences</li>
+    <li><strong>21.</strong> SIT Test Cases — Notifications</li>
+    <li><strong>22.</strong> SIT Test Cases — Security & Audit</li>
+    <li><strong>23.</strong> Cross-Module Integration Tests</li>
+    <li><strong>24.</strong> API Integration Tests</li>
+    <li><strong>25.</strong> Test Execution Summary Template</li>
+    <li><strong>26.</strong> Defect Reporting</li>
+    <li><strong>27.</strong> Sign-Off Criteria</li>
+  </ul>
+</div>
+
+<!-- SECTION 1 -->
+<div class="page-break"></div>
+<h1>1. Document Overview</h1>
+
+<h2>1.1 Purpose</h2>
+<p>This document defines the System Integration Testing (SIT) strategy, test cases, and execution criteria for the RHoSAM Hotel & Suites Premium Management Platform. SIT validates that all modules integrate correctly, data flows properly between components, and the system meets functional requirements end-to-end.</p>
+
+<h2>1.2 Scope</h2>
+<p>Covers all 25+ modules and their integration points including: Authentication, Reservations, Front Desk, Room Management, Guest CRM, Housekeeping, F&B, Spa, Events, Maintenance, Finance, Multi-Currency, HR, Shift Scheduling (AI), Shift Swaps, Conflict Detection, Labor Cost Optimization, Guest Mobile App, Digital Key, Room Controls, Local Experiences, Notifications, and Security/Audit.</p>
+
+<h2>1.3 Test Approach</h2>
+<table>
+  <tr><th>Level</th><th>Focus</th><th>Tools</th></tr>
+  <tr><td>API Integration</td><td>Backend endpoint contract validation</td><td>Manual + automated scripts</td></tr>
+  <tr><td>Module Integration</td><td>Cross-module data flow</td><td>Manual test execution</td></tr>
+  <tr><td>End-to-End</td><td>Complete business workflows</td><td>Manual with test scenarios</td></tr>
+  <tr><td>WebSocket</td><td>Real-time notification delivery</td><td>Browser + manual verification</td></tr>
+  <tr><td>Database</td><td>Data integrity across operations</td><td>SQL verification queries</td></tr>
+</table>
+
+<!-- SECTION 2 -->
+<h1>2. Test Environment</h1>
+
+<table>
+  <tr><th>Component</th><th>Configuration</th></tr>
+  <tr><td>Frontend</td><td>React + Vite (development server, port 5173)</td></tr>
+  <tr><td>Backend</td><td>Node.js + Express (port 5000)</td></tr>
+  <tr><td>Database</td><td>PostgreSQL 14+ (rhosam_hotel)</td></tr>
+  <tr><td>WebSocket</td><td>ws library on /ws path</td></tr>
+  <tr><td>Test Browser</td><td>Chrome 120+ (latest)</td></tr>
+  <tr><td>Test OS</td><td>Windows 11 / macOS / Linux</td></tr>
+</table>
+
+<h3>Pre-requisites</h3>
+<ul>
+  <li>PostgreSQL running with test database seeded</li>
+  <li>Backend server running with auto-migration</li>
+  <li>Frontend development server running</li>
+  <li>Test accounts available (admin, manager, front_desk, staff, guest)</li>
+  <li>Seed data loaded (rooms, guests, reservations, menu items, spa services)</li>
+</ul>
+
+<!-- SECTION 3 -->
+<div class="page-break"></div>
+<h1>3. Integration Points</h1>
+
+<h2>3.1 Integration Matrix</h2>
+<table>
+  <tr><th>Source Module</th><th>Target Module</th><th>Data Flow</th><th>Trigger</th></tr>
+  <tr><td>Authentication</td><td>All Modules</td><td>JWT token, user role</td><td>Login</td></tr>
+  <tr><td>Reservations</td><td>Front Desk</td><td>Check-in/out status</td><td>Status change</td></tr>
+  <tr><td>Reservations</td><td>Guest CRM</td><td>Guest profile, loyalty</td><td>New booking</td></tr>
+  <tr><td>Reservations</td><td>Finance</td><td>Folio creation</td><td>Booking confirmed</td></tr>
+  <tr><td>Reservations</td><td>Rooms</td><td>Room status change</td><td>Check-in/out</td></tr>
+  <tr><td>Front Desk</td><td>Housekeeping</td><td>Room status (DIRTY/CLEAN)</td><td>Guest checkout</td></tr>
+  <tr><td>Guest App (Room Service)</td><td>F&B</td><td>Order creation</td><td>Order placed</td></tr>
+  <tr><td>Guest App (Room Service)</td><td>Notifications</td><td>Staff + guest notifications</td><td>Order status change</td></tr>
+  <tr><td>Guest App (Spa)</td><td>Spa</td><td>Appointment creation</td><td>Booking made</td></tr>
+  <tr><td>Guest App (Spa)</td><td>Notifications</td><td>Staff + guest notifications</td><td>Status change</td></tr>
+  <tr><td>Guest App (Digital Key)</td><td>Rooms</td><td>Room status to OCCUPIED</td><td>Key unlock</td></tr>
+  <tr><td>Guest App (Room Controls)</td><td>WebSocket</td><td>Real-time control update</td><td>Toggle change</td></tr>
+  <tr><td>Guest App (Experiences)</td><td>Concierge</td><td>Booking request</td><td>Experience booked</td></tr>
+  <tr><td>Scheduling</td><td>Conflict Detection</td><td>Conflict alerts</td><td>Shift change</td></tr>
+  <tr><td>Scheduling</td><td>Labor Cost</td><td>Cost calculation</td><td>Shift created</td></tr>
+  <tr><td>Shift Swaps</td><td>Scheduling</td><td>Shift user reassignment</td><td>Swap approved</td></tr>
+  <tr><td>AI Auto-Schedule</td><td>Employee Preferences</td><td>Preference-aware scheduling</td><td>Auto-schedule run</td></tr>
+  <tr><td>Payments</td><td>Multi-Currency</td><td>Currency conversion</td><td>Payment processed</td></tr>
+  <tr><td>Notifications</td><td>WebSocket</td><td>Real-time push</td><td>Any event</td></tr>
+  <tr><td>All Modules</td><td>Audit Log</td><td>Action logging</td><td>Every API call</td></tr>
+</table>
+
+<!-- SECTION 4 -->
+<h1>4. Test Data Strategy</h1>
+
+<h3>Pre-seeded Test Data</h3>
+<table>
+  <tr><th>Entity</th><th>Count</th><th>Details</th></tr>
+  <tr><td>Users</td><td>8+</td><td>Admin, Manager, Front Desk, Housekeeping, Restaurant, Maintenance, Staff</td></tr>
+  <tr><td>Room Types</td><td>6</td><td>Standard through Royal Suite (₦50K–₦200K)</td></tr>
+  <tr><td>Rooms</td><td>50</td><td>Rooms 101–150 across multiple floors</td></tr>
+  <tr><td>Guests</td><td>10</td><td>Mixed loyalty tiers (Platinum to Bronze)</td></tr>
+  <tr><td>Reservations</td><td>10+</td><td>Mixed statuses (CONFIRMED, CHECKED_IN, CHECKED_OUT)</td></tr>
+  <tr><td>Menu Items</td><td>15+</td><td>Across Starters, Main Course, Desserts, Beverages</td></tr>
+  <tr><td>Spa Services</td><td>8+</td><td>Massage, Facial, Body Treatment, Packages</td></tr>
+  <tr><td>Local Experiences</td><td>10</td><td>Lagos attractions and activities</td></tr>
+  <tr><td>Currencies</td><td>10</td><td>NGN, USD, GBP, EUR, AED, ZAR, GHS, KES, CNY, INR</td></tr>
+</table>
+
+<!-- SECTION 5 -->
+<div class="page-break"></div>
+<h1>5. SIT Test Cases — Authentication & Access Control</h1>
+
+<table>
+  <tr><th>ID</th><th>Test Case</th><th>Steps</th><th>Expected Result</th><th>Priority</th><th>Status</th></tr>
+  <tr>
+    <td>SIT-AUTH-001</td>
+    <td>Admin login with valid credentials</td>
+    <td>1. POST /api/auth/login with admin@rhosamhotel.com / admin123</td>
+    <td>Returns JWT token and user object with role ADMIN</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-AUTH-002</td>
+    <td>Login with invalid password</td>
+    <td>1. POST /api/auth/login with wrong password</td>
+    <td>Returns 401 with "Invalid credentials" message</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-AUTH-003</td>
+    <td>Access protected endpoint without token</td>
+    <td>1. GET /api/rooms without Authorization header</td>
+    <td>Returns 401 "No token provided"</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-AUTH-004</td>
+    <td>Staff role accessing admin-only endpoint</td>
+    <td>1. Login as STAFF role<br>2. GET /api/audit-logs</td>
+    <td>Returns 403 "Insufficient permissions"</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-AUTH-005</td>
+    <td>JWT token expiry</td>
+    <td>1. Login and get token<br>2. Wait 12+ hours<br>3. Use token for API call</td>
+    <td>Returns 401 "Token expired"</td>
+    <td><span class="badge badge-med">MEDIUM</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-AUTH-006</td>
+    <td>Guest login with confirmation number</td>
+    <td>1. POST /api/guest/login with confirmation + last name</td>
+    <td Returns guest JWT token and reservation details</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-AUTH-007</td>
+    <td>Guest accessing staff endpoints</td>
+    <td>1. Login as guest<br>2. GET /api/rooms</td>
+    <td>Returns 403 — guest token cannot access admin routes</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-AUTH-008</td>
+    <td>Change password</td>
+    <td>1. Login as admin<br>2. PATCH /api/auth/change-password with current + new password</td>
+    <td Password updated; old password no longer works; new password works</td>
+    <td><span class="badge badge-med">MEDIUM</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-AUTH-009</td>
+    <td>GET /api/auth/me returns current user</td>
+    <td>1. Login as manager<br>2. GET /api/auth/me</td>
+    <td Returns user object with name, email, role, department</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+</table>
+
+<!-- SECTION 6 -->
+<h1>6. SIT Test Cases — Reservations & Front Desk</h1>
+
+<table>
+  <tr><th>ID</th><th>Test Case</th><th>Steps</th><th>Expected Result</th><th>Priority</th><th>Status</th></tr>
+  <tr>
+    <td>SIT-RES-001</td>
+    <td>Create reservation with new guest</td>
+    <td>1. POST /api/guests (create guest)<br>2. POST /api/reservations with guest_id, room_type, dates</td>
+    <td>Reservation created with CONFIRMED status, confirmation number generated</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-RES-002</td>
+    <td>Double-booking prevention</td>
+    <td>1. Create reservation for Room 101, Aug 28–30<br>2. Try to create another reservation for Room 101, Aug 29</td>
+    <td Second reservation rejected with conflict error</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-RES-003</td>
+    <td>Room availability check</td>
+    <td>1. GET /api/rooms/availability?checkIn=2026-08-28&checkOut=2026-08-30</td>
+    <td Returns list of available rooms for the date range</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-RES-004</td>
+    <td>Check-in flow</td>
+    <td>1. Create CONFIRMED reservation<br>2. PATCH /api/reservations/:id with status=CHECKED_IN<br>3. Verify room status changes to OCCUPIED</td>
+    <td>Reservation status=CHECKED_IN, room status=OCCUPIED, folio created</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-RES-005</td>
+    <td>Check-out flow</td>
+    <td>1. Check in guest<br>2. PATCH reservation status to CHECKED_OUT<br>3. Verify room status changes to DIRTY</td>
+    <td>Reservation status=CHECKED_OUT, room status=DIRTY, folio finalized</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-RES-006</td>
+    <td>Folio charge after check-in</td>
+    <td>1. Check in guest<br>2. POST /api/folios/:id/charge with room service charge<br>3. Verify folio balance updates</td>
+    <td>Charge added, folio balance increased by charge amount</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-RES-007</td>
+    <td>Cancel reservation</td>
+    <td>1. Create CONFIRMED reservation<br>2. DELETE /api/reservations/:id</td>
+    <td>Reservation deleted or status changed to CANCELLED</td>
+    <td><span class="badge badge-med">MEDIUM</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+</table>
+
+<!-- SECTION 7 -->
+<h1>7. SIT Test Cases — Room Management</h1>
+
+<table>
+  <tr><th>ID</th><th>Test Case</th><th>Steps</th><th>Expected Result</th><th>Priority</th><th>Status</th></tr>
+  <tr>
+    <td>SIT-ROOM-001</td>
+    <td>Get room list</td>
+    <td>1. GET /api/rooms</td>
+    <td Returns array of rooms with room_number, type, status, floor</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-ROOM-002</td>
+    <td>Update room status</td>
+    <td>1. PATCH /api/rooms/:id/status with status=CLEAN</td>
+    <td>Room status updated to CLEAN, audit log created</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-ROOM-003</td>
+    <td>Create new room</td>
+    <td>1. POST /api/rooms with room_number, room_type_id, floor</td>
+    <td>Room created with VACANT status</td>
+    <td><span class="badge badge-med">MEDIUM</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-ROOM-004</td>
+    <td>Room status cascade on checkout</td>
+    <td>1. Check in guest (room → OCCUPIED)<br>2. Check out guest (room → DIRTY)<br>3. Housekeeping cleans (room → CLEAN)</td>
+    <td>Room status transitions: VACANT → OCCUPIED → DIRTY → CLEAN</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+</table>
+
+<!-- SECTION 12-13 -->
+<div class="page-break"></div>
+<h1>12-13. SIT Test Cases — Finance & Multi-Currency</h1>
+
+<table>
+  <tr><th>ID</th><th>Test Case</th><th>Steps</th><th>Expected Result</th><th>Priority</th><th>Status</th></tr>
+  <tr>
+    <td>SIT-FIN-001</td>
+    <td>Process payment via Paystack</td>
+    <td>1. POST /api/payments/process with amount=50000, currency=NGN, gateway=paystack</td>
+    <td>Transaction created with status=PENDING (simulated), folio updated</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-FIN-002</td>
+    <td>Currency conversion</td>
+    <td>1. POST /api/currencies/convert with amount=100000, from=NGN, to=USD</td>
+    <td>Returns converted amount in USD with correct exchange rate</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-FIN-003</td>
+    <td>Payment in non-base currency</td>
+    <td>1. Process payment with currency=GBP<br>2. Verify amount stored in base currency (NGN)</td>
+    <td>Payment stored with original GBP amount AND converted NGN equivalent</td>
+    <td><span class="badge badge-med">MEDIUM</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-FIN-004</td>
+    <td>Finance summary reflects multi-currency</td>
+    <td>1. Process payments in NGN, USD, GBP<br>2. GET /api/finance/summary</td>
+    <td>All amounts displayed in selected base currency with correct totals</td>
+    <td><span class="badge badge-med">MEDIUM</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-FIN-005</td>
+    <td>Payment gateway validation</td>
+    <td>1. Process payment with currency=AED via Stripe (supported)<br>2. Process payment with currency=AED via Paystack (not supported)</td>
+    <td>Stripe succeeds; Paystack returns error about unsupported currency</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+</table>
+
+<!-- SECTION 14-17 -->
+<h1>14-17. SIT Test Cases — Scheduling, Swaps, Conflicts, Costs</h1>
+
+<table>
+  <tr><th>ID</th><th>Test Case</th><th>Steps</th><th>Expected Result</th><th>Priority</th><th>Status</th></tr>
+  <tr>
+    <td>SIT-SCH-001</td>
+    <td>Create shift</td>
+    <td>1. POST /api/shifts with userId, shiftDate, shiftStart=06:00, shiftEnd=14:00</td>
+    <td>Shift created with employee name and department populated</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-SCH-002</td>
+    <td>Overlap prevention</td>
+    <td>1. Create shift for user 2, Aug 28, 06:00–14:00<br>2. Create shift for user 2, Aug 28, 10:00–18:00</td>
+    <td>Second shift rejected with overlap error</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-SCH-003</td>
+    <td>AI auto-schedule</td>
+    <td>1. POST /api/shifts/auto-schedule with from/to dates</td>
+    <td>Shifts generated respecting employee preferences, max hours, department needs</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-SCH-004</td>
+    <td>Demand forecast</td>
+    <td>1. GET /api/shifts/demand-forecast with from/to dates</td>
+    <td>Returns daily forecast with occupancy, dept staffing needs, gaps</td>
+    <td><span class="badge badge-med">MEDIUM</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-SWP-001</td>
+    <td>Create swap request</td>
+    <td>1. POST /api/shift-swaps with requesterShiftId</td>
+    <td>Swap request created with status=PENDING</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-SWP-002</td>
+    <td>Approve swap and execute</td>
+    <td>1. Create swap with targetShiftId<br>2. POST /api/shift-swaps/:id/approve</td>
+    <td>Both shifts have user_ids swapped, status=APPROVED</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-CON-001</td>
+    <td>Conflict detection — overlap</td>
+    <td>1. Manually create overlapping shifts<br>2. GET /api/shifts/conflicts</td>
+    <td>Returns OVERLAP conflict with type=CRITICAL</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-CON-002</td>
+    <td>Conflict detection — understaffing</td>
+    <td>1. Create shifts for only 1 staff in Housekeeping<br>2. GET /api/shifts/conflicts</td>
+    <td>Returns UNDERSTAFFED conflict for Housekeeping</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-COST-001</td>
+    <td>Labor cost calculation</td>
+    <td>1. Create shifts for the week<br>2. GET /api/labor/cost-analysis</td>
+    <td>Returns grand total, regular/overtime/premium breakdown per department</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-COST-002</td>
+    <td>Overtime cost detection</td>
+    <td>1. Create 12-hour shift (06:00–18:00)<br>2. GET /api/labor/cost-analysis</td>
+    <td>8h at regular rate + 4h at overtime rate (1.5×) in breakdown</td>
+    <td><span class="badge badge-med">MEDIUM</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+</table>
+
+<!-- SECTION 18-20 -->
+<div class="page-break"></div>
+<h1>18-20. SIT Test Cases — Guest Mobile App</h1>
+
+<table>
+  <tr><th>ID</th><th>Test Case</th><th>Steps</th><th>Expected Result</th><th>Priority</th><th>Status</th></tr>
+  <tr>
+    <td>SIT-GST-001</td>
+    <td>Guest login</td>
+    <td>1. POST /api/guest/login with valid confirmation + last name</td>
+    <td>Guest JWT token issued, reservation details returned</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-GST-002</td>
+    <td>Digital check-in</td>
+    <td>1. Login as guest<br>2. POST /api/guest/check-in</td>
+    <td>Reservation status=CHECKED_IN, room status=OCCUPIED</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-GST-003</td>
+    <td>Place room service order</td>
+    <td>1. POST /api/guest/room-service with items array</td>
+    <td>Order created, restaurant staff notified via WebSocket</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-GST-004</td>
+    <td>Room service status notification</td>
+    <td>1. Place room service order<br>2. Staff updates order status to COMPLETED<br>3. Verify guest receives WebSocket notification</td>
+    <td>Guest receives real-time toast: "Your order #X is ready for delivery"</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-GST-005</td>
+    <td>Book spa appointment</td>
+    <td>1. POST /api/guest/spa/book with serviceId, date, time</td>
+    <td>Appointment created, spa staff notified</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-GST-006</td>
+    <td>Spa status notification</td>
+    <td>1. Book spa appointment<br>2. Staff updates status to CONFIRMED<br>3. Verify guest notification</td>
+    <td>Guest receives notification: "Your appointment has been confirmed"</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-GST-007</td>
+    <td>Activate digital key</td>
+    <td>1. POST /api/guest/digital-key/activate</td>
+    <td>Key created with unique code, QR permissions, expiry date</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-GST-008</td>
+    <td>Unlock room via NFC</td>
+    <td>1. Activate key<br>2. POST /api/guest/digital-key/unlock</td>
+    <td>Room status → OCCUPIED, access logged</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-GST-009</td>
+    <td>Control room lights</td>
+    <td>1. PATCH /api/guest/room-controls with lights_bedroom=true<br>2. GET /api/guest/room-controls</td>
+    <td>Lights state updated and persisted</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-GST-010</td>
+    <td>Control room AC</td>
+    <td>1. PATCH /api/guest/room-controls with ac_temperature=20, ac_mode=COOL</td>
+    <td>AC state updated, WebSocket broadcast sent</td>
+    <td><span class="badge badge-med">MEDIUM</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-GST-011</td>
+    <td>Book local experience</td>
+    <td>1. GET /api/guest/experiences (verify list)<br>2. POST /api/guest/experience-book</td>
+    <td>Booking created with PENDING status, concierge notified</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-GST-012</td>
+    <td>Submit concierge request</td>
+    <td>1. POST /api/guest/concierge with type, description, priority</td>
+    <td>Request created, staff notified</td>
+    <td><span class="badge badge-med">MEDIUM</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-GST-013</td>
+    <td>Digital check-out</td>
+    <td>1. POST /api/guest/check-out<br>2. Verify reservation and room status</td>
+    <td>Reservation=CHECKED_OUT, room=DIRTY, key revoked</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-GST-014</td>
+    <td>Submit feedback</td>
+    <td>1. POST /api/guest/feedback with rating, category, comment</td>
+    <td>Feedback saved, guest satisfaction score updated</td>
+    <td><span class="badge badge-med">MEDIUM</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+</table>
+
+<!-- SECTION 21 -->
+<h1>21. SIT Test Cases — Notifications</h1>
+
+<table>
+  <tr><th>ID</th><th>Test Case</th><th>Steps</th><th>Expected Result</th><th>Priority</th><th>Status</th></tr>
+  <tr>
+    <td>SIT-NOT-001</td>
+    <td>WebSocket connection</td>
+    <td>1. Connect to ws://localhost:5000/ws?token=JWT</td>
+    <td>Connection established, no errors</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-NOT-002</td>
+    <td>Real-time notification delivery</td>
+    <td>1. Connect WebSocket as manager<br>2. Guest places room service order<br>3. Verify notification received</td>
+    <td>Manager receives JSON notification with type="notification", title, body</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-NOT-003</td>
+    <td>Notification persistence</td>
+    <td>1. Trigger notification<br>2. GET /api/notifications</td>
+    <td>Notification appears in list with correct title, body, type, created_at</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-NOT-004</td>
+    <td>Mark notifications read</td>
+    <td>1. PATCH /api/notifications/read with ids array</td>
+    <td>Specified notifications marked as is_read=true, unread count decremented</td>
+    <td><span class="badge badge-med">MEDIUM</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-NOT-005</td>
+    <td>WebSocket auto-reconnect</td>
+    <td>1. Connect WebSocket<br>2. Disconnect network<br>3. Reconnect network</td>
+    <td>WebSocket reconnects within 3 seconds automatically</td>
+    <td><span class="badge badge-med">MEDIUM</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+</table>
+
+<!-- SECTION 22 -->
+<h1>22. SIT Test Cases — Security & Audit</h1>
+
+<table>
+  <tr><th>ID</th><th>Test Case</th><th>Steps</th><th>Expected Result</th><th>Priority</th><th>Status</th></tr>
+  <tr>
+    <td>SIT-SEC-001</td>
+    <td>Audit log creation</td>
+    <td>1. Create a reservation<br>2. GET /api/audit-logs</td>
+    <td>Audit log entry exists with action=CREATE, entity=RESERVATION, user_id, timestamp</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-SEC-002</td>
+    <td>Audit log immutability</td>
+    <td>1. GET /api/audit-logs<br>2. Verify no DELETE/PATCH endpoints exist</td>
+    <td>Audit logs cannot be modified or deleted</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-SEC-003</td>
+    <td>Password hashing</td>
+    <td>1. Check users table in database</td>
+    <td>password_hash field contains bcrypt hash, not plaintext</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-SEC-004</td>
+    <td>SQL injection prevention</td>
+    <td>1. POST /api/auth/login with email: "'; DROP TABLE users; --"</td>
+    <td>Returns 401 "Invalid credentials", database unaffected</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-SEC-005</td>
+    <td>Guest data isolation</td>
+    <td>1. Login as Guest A<br>2. Try to access Guest B's folio</td>
+    <td>Returns 404 or 403 — guest can only access own data</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+</table>
+
+<!-- SECTION 23 -->
+<div class="page-break"></div>
+<h1>23. Cross-Module Integration Tests</h1>
+
+<table>
+  <tr><th>ID</th><th>Test Case</th><th>Steps</th><th>Expected Result</th><th>Priority</th><th>Status</th></tr>
+  <tr>
+    <td>SIT-XMOD-001</td>
+    <td>Full booking → check-in → room service → check-out flow</td>
+    <td>1. Create reservation<br>2. Check in guest<br>3. Guest places room service order<br>4. Staff marks order complete<br>5. Guest checks out<br>6. Verify: reservation, room, folio, notification, audit log states</td>
+    <td>All module states consistent: reservation=CHECKED_OUT, room=DIRTY, folio has charges, notifications delivered, audit trail complete</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-XMOD-002</td>
+    <td>AI schedule → conflict detection → cost analysis flow</td>
+    <td>1. Run AI auto-schedule<br>2. Run conflict detection<br>3. Run cost analysis<br>4. Verify consistency between generated shifts, conflicts, and costs</td>
+    <td>No overlap conflicts in AI-generated schedule; cost analysis reflects all shifts; suggestions provided</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-XMOD-003</td>
+    <td>Swap approval → shift update → cost recalculation</td>
+    <td>1. Create two shifts for different employees<br>2. Create swap request<br>3. Approve swap<br>4. Re-run cost analysis</td>
+    <td>Shifts swapped correctly; cost analysis reflects new assignment; no data inconsistency</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-XMOD-004</td>
+    <td>Digital key → room control → notification flow</td>
+    <td>1. Guest activates digital key<br>2. Guest unlocks room<br>3. Guest controls lights via app<br>4. Verify WebSocket broadcast</td>
+    <td>Key activated, room unlocked, light state updated, WebSocket broadcast received</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+  <tr>
+    <td>SIT-XMOD-005</td>
+    <td>Guest experience booking → concierge notification → staff action</td>
+    <td>1. Guest books local experience<br>2. Verify concierge notification<br>3. Staff views booking<br>4. Staff confirms booking</td>
+    <td>Booking created, notification delivered, staff can view and manage</td>
+    <td><span class="badge badge-med">MEDIUM</span></td>
+    <td class="na">NOT RUN</td>
+  </tr>
+</table>
+
+<!-- SECTION 25 -->
+<h1>25. Test Execution Summary Template</h1>
+
+<table>
+  <tr><th>Module</th><th>Total Cases</th><th>Passed</th><th>Failed</th><th>Blocked</th><th>Not Run</th><th>Pass %</th></tr>
+  <tr><td>Authentication & Access</td><td>9</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>Reservations & Front Desk</td><td>7</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>Room Management</td><td>4</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>Guest CRM</td><td>3</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>Housekeeping & Maintenance</td><td>4</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>F&B and Room Service</td><td>4</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>Spa & Wellness</td><td>3</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>Finance & Payments</td><td>5</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>Multi-Currency</td><td>3</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>Shift Scheduling</td><td>4</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>Shift Swaps</td><td>2</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>Conflict Detection</td><td>2</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>Labor Cost Optimization</td><td>2</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>Guest Mobile App</td><td>14</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>Notifications</td><td>5</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>Security & Audit</td><td>5</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>Cross-Module Integration</td><td>5</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td><strong>TOTAL</strong></td><td><strong>81</strong></td><td></td><td></td><td></td><td></td><td></td></tr>
+</table>
+
+<!-- SECTION 26 -->
+<h1>26. Defect Reporting</h1>
+
+<table>
+  <tr><th>Field</th><th>Description</th></tr>
+  <tr><td>Defect ID</td><td>Auto-generated (DEF-XXX)</td></tr>
+  <tr><td>Test Case ID</td><td>Linked SIT test case</td></tr>
+  <tr><td>Severity</td><td>Critical / High / Medium / Low</td></tr>
+  <tr><td>Summary</td><td>Brief description</td></tr>
+  <tr><td>Steps to Reproduce</td><td>Detailed steps</td></tr>
+  <tr><td>Expected vs Actual</td><td>What should happen vs what happened</td></tr>
+  <tr><td>Environment</td><td>Browser, OS, API version</td></tr>
+  <tr><td>Screenshots</td><td>Attached evidence</td></tr>
+  <tr><td>Status</td><td>Open / In Progress / Fixed / Verified / Closed</td></tr>
+</table>
+
+<!-- SECTION 27 -->
+<h1>27. Sign-Off Criteria</h1>
+
+<div class="note">
+<strong>SIT Exit Criteria:</strong> All HIGH priority test cases must pass. No open Critical or High severity defects. At least 85% overall pass rate across all test cases. All cross-module integration tests must pass.
+</div>
+
+<table>
+  <tr><th>Criterion</th><th>Target</th><th>Actual</th><th>Met?</th></tr>
+  <tr><td>All HIGH priority tests passed</td><td>100%</td><td></td><td></td></tr>
+  <tr><td>No open Critical defects</td><td>0</td><td></td><td></td></tr>
+  <tr><td>No open High defects</td><td>0</td><td></td><td></td></tr>
+  <tr><td>Overall pass rate</td><td>≥ 85%</td><td></td><td></td></tr>
+  <tr><td>Cross-module integration tests</td><td>100%</td><td></td><td></td></tr>
+  <tr><td>WebSocket real-time tests</td><td>100%</td><td></td><td></td></tr>
+  <tr><td>Security tests</td><td>100%</td><td></td><td></td></tr>
+</table>
+
+<h3>Sign-Off</h3>
+<table>
+  <tr><th>Role</th><th>Name</th><th>Signature</th><th>Date</th></tr>
+  <tr><td>QA Lead</td><td></td><td></td><td></td></tr>
+  <tr><td>Development Lead</td><td></td><td></td><td></td></tr>
+  <tr><td>Project Manager</td><td></td><td></td><td></td></tr>
+</table>
+
+<div class="footer">
+  <p>RHoSAM Hotel & Suites — SIT Document v2.0</p>
+  <p>© 2026 RHoSAM Hospitality. Confidential.</p>
+</div>
+
+</body>
+</html>

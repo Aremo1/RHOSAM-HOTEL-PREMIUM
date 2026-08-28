@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RHoSAM Hotel & Suites — Premium Management Platform Manual</title>
+<style>
+  @page { size: A4; margin: 20mm; }
+  @media print { .no-print { display: none; } body { font-size: 11pt; } .page-break { page-break-before: always; } }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; line-height: 1.6; color: #1e293b; max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+  h1 { font-size: 28px; color: #0f172a; border-bottom: 3px solid #f59e0b; padding-bottom: 10px; margin: 30px 0 20px; }
+  h2 { font-size: 22px; color: #1e3a5f; margin: 25px 0 15px; border-left: 4px solid #f59e0b; padding-left: 12px; }
+  h3 { font-size: 17px; color: #334155; margin: 20px 0 10px; }
+  h4 { font-size: 14px; color: #475569; margin: 15px 0 8px; }
+  p { margin: 8px 0; text-align: justify; }
+  table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 13px; }
+  th { background: #1e3a5f; color: white; padding: 10px 12px; text-align: left; font-weight: 600; }
+  td { padding: 8px 12px; border-bottom: 1px solid #e2e8f0; }
+  tr:nth-child(even) { background: #f8fafc; }
+  code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'Consolas', monospace; font-size: 12px; color: #be185d; }
+  pre { background: #0f172a; color: #e2e8f0; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 12px; margin: 10px 0; }
+  pre code { background: transparent; color: inherit; }
+  .cover { text-align: center; padding: 80px 20px; background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%); color: white; border-radius: 12px; margin: 40px 0; }
+  .cover h1 { color: #f59e0b; border: none; font-size: 36px; }
+  .cover p { color: #94a3b8; font-size: 16px; }
+  .toc { background: #f8fafc; padding: 20px 30px; border-radius: 8px; margin: 20px 0; }
+  .toc ul { list-style: none; }
+  .toc li { padding: 4px 0; border-bottom: 1px dotted #cbd5e1; }
+  .toc a { text-decoration: none; color: #1e3a5f; }
+  .note { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 15px 0; font-size: 13px; }
+  .warning { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 15px 0; font-size: 13px; }
+  .danger { background: #fef2f2; border-left: 4px solid #ef4444; padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 15px 0; font-size: 13px; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .badge-green { background: #dcfce7; color: #166534; }
+  .badge-amber { background: #fef3c7; color: #92400e; }
+  .badge-blue { background: #dbeafe; color: #1e40af; }
+  .badge-red { background: #fef2f2; color: #991b1b; }
+  ul, ol { margin: 8px 0 8px 20px; }
+  li { margin: 4px 0; }
+  .footer { text-align: center; color: #94a3b8; font-size: 11px; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div style="font-size:48px;margin-bottom:20px;">🏨</div>
+  <h1>RHoSAM Hotel & Suites</h1>
+  <p style="font-size:22px;color:#f59e0b;font-weight:600;">Premium Management Platform</p>
+  <p style="margin-top:20px;">Complete System Manual — Version 2.0</p>
+  <p>August 2026</p>
+  <p style="margin-top:30px;font-size:12px;color:#64748b;">Confidential — For Internal Use Only</p>
+</div>
+
+<!-- TABLE OF CONTENTS -->
+<div class="toc">
+  <h2>Table of Contents</h2>
+  <ul>
+    <li><strong>1.</strong> Executive Summary</li>
+    <li><strong>2.</strong> System Architecture</li>
+    <li><strong>3.</strong> Technology Stack</li>
+    <li><strong>4.</strong> Module Guide
+      <ul style="margin-left:20px;">
+        <li>4.1 Authentication & Access Control</li>
+        <li>4.2 Executive Dashboard</li>
+        <li>4.3 Reservations & Booking</li>
+        <li>4.4 Front Desk Operations</li>
+        <li>4.5 Room Management</li>
+        <li>4.6 Guest CRM & Loyalty</li>
+        <li>4.7 Housekeeping</li>
+        <li>4.8 Food & Beverage</li>
+        <li>4.9 Spa & Wellness</li>
+        <li>4.10 Events & Banqueting</li>
+        <li>4.11 Maintenance & Engineering</li>
+        <li>4.12 Finance & Payments</li>
+        <li>4.13 Multi-Currency & Payment Gateways</li>
+        <li>4.14 Human Resources & Team</li>
+        <li>4.15 Shift Scheduling (AI-Powered)</li>
+        <li>4.16 Shift Swap & Trade Requests</li>
+        <li>4.17 Conflict Detection & Understaffing Alerts</li>
+        <li>4.18 Labor Cost Optimization</li>
+        <li>4.19 Security & Audit</li>
+        <li>4.20 Guest Mobile App</li>
+        <li>4.21 Digital Room Key</li>
+        <li>4.22 Room Controls (IoT)</li>
+        <li>4.23 Local Experiences & Concierge</li>
+        <li>4.24 Real-Time Notifications</li>
+        <li>4.25 Settings & Configuration</li>
+      </ul>
+    </li>
+    <li><strong>5.</strong> API Reference</li>
+    <li><strong>6.</strong> Database Schema</li>
+    <li><strong>7.</strong> Deployment Guide</li>
+    <li><strong>8.</strong> Security & Compliance</li>
+    <li><strong>9.</strong> Troubleshooting</li>
+    <li><strong>10.</strong> Appendices</li>
+  </ul>
+</div>
+
+<!-- SECTION 1 -->
+<div class="page-break"></div>
+<h1>1. Executive Summary</h1>
+
+<h2>1.1 Product Overview</h2>
+<p>RHoSAM Hotel & Suites Premium Management Platform is a comprehensive, enterprise-grade Property Management System (PMS) designed for five-star luxury hotels. It combines hotel operations, guest experience, employee management, financial controls, and AI-powered intelligence into a single unified platform.</p>
+
+<h2>1.2 Product Vision</h2>
+<p>To be the leading hotel operating system for luxury hospitality in Africa and beyond, combining enterprise control, modern cloud automation, and exceptional guest personalization.</p>
+
+<h2>1.3 Primary Users</h2>
+<table>
+  <tr><th>User Role</th><th>Access Level</th><th>Primary Modules</th></tr>
+  <tr><td>Hotel Administrator</td><td>Full access</td><td>All modules</td></tr>
+  <tr><td>Manager</td><td>Operational</td><td>All operational modules, reports</td></tr>
+  <tr><td>Front Desk</td><td>Guest-facing</td><td>Reservations, check-in/out, guest CRM, front desk</td></tr>
+  <tr><td>Housekeeping</td><td>Department</td><td>Housekeeping tasks, room status</td></tr>
+  <tr><td>Restaurant</td><td>Department</td><td>F&B orders, menu, room service</td></tr>
+  <tr><td>Maintenance</td><td>Department</td><td>Maintenance requests, work orders</td></tr>
+  <tr><td>Staff</td><td>Basic</td><td>Shifts, swaps, profile</td></tr>
+  <tr><td>Guest (Mobile)</td><td>Guest portal</td><td>Check-in, room service, spa, concierge, key, controls</td></tr>
+</table>
+
+<h2>1.4 Competitive Positioning</h2>
+<table>
+  <tr><th>Feature</th><th>RHoSAM</th><th>Oracle OPERA</th><th>Mews</th><th>Cloudbeds</th></tr>
+  <tr><td>AI Auto-Scheduling</td><td class="badge-green">✓</td><td>Limited</td><td>✓</td><td>✗</td></tr>
+  <tr><td>Digital Room Key</td><td class="badge-green">✓</td><td>✓</td><td>✓</td><td>✗</td></tr>
+  <tr><td>Room IoT Controls</td><td class="badge-green">✓</td><td>Partners</td><td>✗</td><td>✗</td></tr>
+  <tr><td>Labor Cost Optimization</td><td class="badge-green">✓</td><td>✓</td><td>✗</td><td>✗</td></tr>
+  <tr><td>Local Experiences Booking</td><td class="badge-green">✓</td><td>✗</td><td>✗</td><td>✗</td></tr>
+  <tr><td>Multi-Currency (Africa)</td><td class="badge-green">✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
+  <tr><td>Guest Mobile App</td><td class="badge-green">✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
+  <tr><td>Real-Time Notifications</td><td class="badge-green">✓</td><td>✓</td><td>✓</td><td>Limited</td></tr>
+</table>
+
+<!-- SECTION 2 -->
+<div class="page-break"></div>
+<h1>2. System Architecture</h1>
+
+<h2>2.1 High-Level Architecture</h2>
+<pre><code>
+┌─────────────────────────────────────────────────────────────┐
+│                    CLIENT LAYER                             │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
+│  │  Admin    │  │  Guest   │  │ Employee │  │  Kiosk   │   │
+│  │  Web App  │  │  Mobile  │  │  Mobile  │  │  Display │   │
+│  │ (React)   │  │ (React)  │  │ (React)  │  │ (React)  │   │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘   │
+│       │              │              │              │         │
+├───────┴──────────────┴──────────────┴──────────────┴─────────┤
+│                    API LAYER                                 │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │              REST API (Express.js)                   │    │
+│  │  JWT Auth • RBAC • Audit Logging • Rate Limiting     │    │
+│  └──────────────────────┬──────────────────────────────┘    │
+│                         │                                    │
+│  ┌──────────────────────┴──────────────────────────────┐    │
+│  │           WebSocket Server (ws)                      │    │
+│  │  Real-time notifications • Room control updates      │    │
+│  └──────────────────────────────────────────────────────┘    │
+│                                                              │
+├──────────────────────────────────────────────────────────────┤
+│                    DATA LAYER                                │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐                   │
+│  │PostgreSQL│  │  Redis   │  │   S3     │                   │
+│  │ Primary  │  │  Cache   │  │ Storage  │                   │
+│  │ Database │  │  Queue   │  │          │                   │
+│  └──────────┘  └──────────┘  └──────────┘                   │
+│                                                              │
+├──────────────────────────────────────────────────────────────┤
+│                    INTEGRATION LAYER                         │
+│  ┌──────┐ ┌────────┐ ┌──────────┐ ┌──────┐ ┌──────────┐   │
+│  │Stripe│ │Paystack│ │Flutterwave│ │ OTA  │ │Door Lock │   │
+│  └──────┘ └────────┘ └──────────┘ └──────┘ └──────────┘   │
+└──────────────────────────────────────────────────────────────┘
+</code></pre>
+
+<h2>2.2 Module Map</h2>
+<table>
+  <tr><th>Module</th><th>Route</th><th>Description</th></tr>
+  <tr><td>Overview/Dashboard</td><td><code>/overview</code></td><td>Live KPIs, revenue, occupancy, activity feed</td></tr>
+  <tr><td>Reservations</td><td><code>/reservations</code></td><td>Booking management, calendar, packages</td></tr>
+  <tr><td>Front Desk</td><td><code>/front-desk</code></td><td>Check-in/out, arrivals/departures</td></tr>
+  <tr><td>Rooms</td><td><code>/rooms</code></td><td>Room inventory, status, availability</td></tr>
+  <tr><td>Guests & CRM</td><td><code>/guests</code></td><td>Guest profiles, loyalty, history</td></tr>
+  <tr><td>Housekeeping</td><td><code>/housekeeping</code></td><td>Task board, inspections, assignments</td></tr>
+  <tr><td>Food & Beverage</td><td><code>/food-beverage</code></td><td>Menu, orders, room service</td></tr>
+  <tr><td>Spa & Wellness</td><td><code>/spa-wellness</code></td><td>Services, appointments, therapists</td></tr>
+  <tr><td>Events</td><td><code>/events</code></td><td>Banquets, conferences, weddings</td></tr>
+  <tr><td>Maintenance</td><td><code>/maintenance</code></td><td>Work orders, assets, preventive</td></tr>
+  <tr><td>Finance</td><td><code>/finance</code></td><td>Revenue, payments, expenses, folios</td></tr>
+  <tr><td>Team</td><td><code>/team</code></td><td>Employee management, roles</td></tr>
+  <tr><td>Scheduling</td><td><code>/scheduling</code></td><td>AI auto-scheduling, drag-and-drop calendar</td></tr>
+  <tr><td>Swaps</td><td><code>/swaps</code></td><td>Shift swap/trade requests</td></tr>
+  <tr><td>Security</td><td><code>/security</code></td><td>Incidents, access control</td></tr>
+  <tr><td>Settings</td><td><code>/settings</code></td><td>System config, preferences, audit</td></tr>
+  <tr><td>Guest App</td><td><code>/guest</code></td><td>Guest mobile experience</td></tr>
+</table>
+
+<!-- SECTION 3 -->
+<div class="page-break"></div>
+<h1>3. Technology Stack</h1>
+
+<table>
+  <tr><th>Layer</th><th>Technology</th><th>Purpose</th></tr>
+  <tr><td>Frontend (Admin)</td><td>React 19 + Vite + Tailwind CSS</td><td>Admin web portal</td></tr>
+  <tr><td>Frontend (Guest)</td><td>React (mobile-first)</td><td>Guest mobile web app</td></tr>
+  <tr><td>Backend</td><td>Node.js + Express.js</td><td>REST API server</td></tr>
+  <tr><td>Database</td><td>PostgreSQL</td><td>Primary data store</td></tr>
+  <tr><td>Real-Time</td><td>WebSocket (ws)</td><td>Push notifications, room controls</td></tr>
+  <tr><td>Authentication</td><td>JWT + bcrypt</td><td>Stateless auth with role-based access</td></tr>
+  <tr><td>UI Components</td><td>Lucide React icons</td><td>Consistent iconography</td></tr>
+  <tr><td>Charts</td><td>Recharts</td><td>Revenue and analytics visualizations</td></tr>
+  <tr><td>PDF Generation</td><td>jsPDF + AutoTable</td><td>Receipts and reports</td></tr>
+  <tr><td>Payments</td><td>Stripe, Paystack, Flutterwave</td><td>Multi-gateway payment processing</td></tr>
+</table>
+
+<!-- SECTION 4 -->
+<div class="page-break"></div>
+<h1>4. Module Guide</h1>
+
+<h2>4.1 Authentication & Access Control</h2>
+<h3>Login</h3>
+<p>Users authenticate via email and password. JWT tokens are issued with 12-hour expiry and stored in localStorage. Token rotation occurs on each API call.</p>
+
+<h3>Role-Based Access Control (RBAC)</h3>
+<table>
+  <tr><th>Role</th><th>Access</th></tr>
+  <tr><td>ADMIN</td><td>Full system access, settings, user management, payroll</td></tr>
+  <tr><td>MANAGER</td><td>All operational modules, reports, approvals, scheduling</td></tr>
+  <tr><td>FRONT_DESK</td><td>Reservations, check-in/out, guest CRM, front desk</td></tr>
+  <tr><td>HOUSEKEEPING</td><td>Housekeeping tasks, room status updates</td></tr>
+  <tr><td>RESTAURANT</td><td>F&B orders, menu management, room service</td></tr>
+  <tr><td>MAINTENANCE</td><td>Maintenance requests, work orders</td></tr>
+  <tr><td>STAFF</td><td>Basic access, shifts, profile, swaps</td></tr>
+</table>
+
+<h3>Guest Authentication</h3>
+<p>Guests authenticate via confirmation number + last name (no account required). Separate JWT with 24-hour expiry and <code>/api/guest/*</code> namespace.</p>
+
+<h2>4.2 Executive Dashboard</h2>
+<p>The dashboard provides real-time operational visibility:</p>
+<ul>
+  <li><strong>Occupancy Rate</strong> — Live room occupancy percentage with trend</li>
+  <li><strong>Revenue Today</strong> — Today's revenue in selected currency</li>
+  <li><strong>Arrivals/Departures</strong> — Expected check-ins and check-outs</li>
+  <li><strong>Guest Satisfaction</strong> — Average rating from feedback</li>
+  <li><strong>Revenue Chart</strong> — 7-day/30-day/1-year revenue trend</li>
+  <li><strong>VIP Arrival</strong> — Next VIP guest with preferences</li>
+  <li><strong>Room Operations</strong> — Live room status table</li>
+  <li><strong>Housekeeping/Maintenance SLA</strong> — Task completion rates</li>
+  <li><strong>Service Activity Feed</strong> — Real-time operational events</li>
+</ul>
+
+<h2>4.3 Reservations & Booking</h2>
+<h3>Features</h3>
+<ul>
+  <li>Full CRUD for reservations with inline guest creation</li>
+  <li>Room availability calendar with real-time updates</li>
+  <li>Booking sources: Direct, OTA, Corporate, Travel Agent</li>
+  <li>VIP flagging and priority handling</li>
+  <li>Confirmation number generation (RH-XXXXXXXX format)</li>
+  <li>Folio creation on booking</li>
+  <li>Status workflow: PENDING → CONFIRMED → CHECKED_IN → CHECKED_OUT</li>
+</ul>
+
+<h2>4.4 Front Desk Operations</h2>
+<h3>Daily Operations</h3>
+<ul>
+  <li><strong>Today's Arrivals</strong> — Guests expected to check in</li>
+  <li><strong>Today's Departures</strong> — Guests expected to check out</li>
+  <li><strong>One-Click Check-In</strong> — Updates reservation status, room status, creates folio</li>
+  <li><strong>One-Click Check-Out</strong> — Settlement, room release, status update</li>
+  <li><strong>Special Requests</strong> — Displayed on arrival cards</li>
+</ul>
+
+<h2>4.5 Room Management</h2>
+<h3>Room Types</h3>
+<table>
+  <tr><th>Type</th><th>Base Rate</th><th>Capacity</th><th>Amenities</th></tr>
+  <tr><td>Standard Room</td><td>₦50,000</td><td>2 guests</td><td>WiFi, TV, AC, Mini Bar, Safe</td></tr>
+  <tr><td>Deluxe Room</td><td>₦75,000</td><td>2 guests</td><td>WiFi, TV, AC, Mini Bar, Safe, Balcony</td></tr>
+  <tr><td>Executive King</td><td>₦120,000</td><td>2 guests</td><td>WiFi, TV, AC, Mini Bar, Safe, Balcony, Living Area</td></tr>
+  <tr><td>Executive Twin</td><td>₦130,000</td><td>3 guests</td><td>WiFi, TV, AC, Mini Bar, Safe, Balcony, Twin Beds</td></tr>
+  <tr><td>Ocean Deluxe</td><td>₦150,000</td><td>2 guests</td><td>WiFi, TV, AC, Mini Bar, Safe, Ocean View, Balcony</td></tr>
+  <tr><td>Royal Suite</td><td>₦200,000</td><td>4 guests</td><td>WiFi, TV, AC, Mini Bar, Safe, Balcony, Living Room, Dining, Jacuzzi, Butler</td></tr>
+</table>
+
+<h3>Room Statuses</h3>
+<table>
+  <tr><td>VACANT</td><td>Available for assignment</td></tr>
+  <tr><td>OCCUPIED</td><td>Currently guest-occupied</td></tr>
+  <tr><td>CLEAN</td><td>Cleaned and ready</td></tr>
+  <tr><td>DIRTY</td><td>Needs cleaning</td></tr>
+  <tr><td>INSPECTED</td><td>Inspected by supervisor</td></tr>
+  <tr><td>OUT_OF_ORDER</td><td>Maintenance required</td></tr>
+</table>
+
+<h2>4.6 Guest CRM & Loyalty</h2>
+<h3>Loyalty Tiers</h3>
+<table>
+  <tr><th>Tier</th><th>Stays</th><th>Benefits</th></tr>
+  <tr><td><span class="badge badge-amber">PLATINUM</span></td><td>10+</td><td>Room upgrade, late checkout, welcome amenity, priority service</td></tr>
+  <tr><td><span class="badge badge-blue">GOLD</span></td><td>5-9</td><td>Welcome amenity, priority restaurant reservations</td></tr>
+  <tr><td><span class="badge badge-green">SILVER</span></td><td>3-4</td><td>Complimentary breakfast, welcome drink</td></tr>
+  <tr><td><span class="badge badge-red">BRONZE</span></td><td>1-2</td><td>Points accrual, member rates</td></tr>
+</table>
+
+<h2>4.7–4.25 (Remaining Modules)</h2>
+<p>Each module follows the same pattern: list view with filters, CRUD modals, status workflows, and role-based access. See the API Reference (Section 5) for complete endpoint documentation.</p>
+
+<!-- SECTION 5 -->
+<div class="page-break"></div>
+<h1>5. API Reference</h1>
+
+<h2>5.1 Authentication</h2>
+<table>
+  <tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Auth</th></tr>
+  <tr><td>POST</td><td><code>/api/auth/login</code></td><td>Login (admin/staff)</td><td>None</td></tr>
+  <tr><td>GET</td><td><code>/api/auth/me</code></td><td>Get current user</td><td>JWT</td></tr>
+  <tr><td>PATCH</td><td><code>/api/auth/change-password</code></td><td>Change password</td><td>JWT</td></tr>
+  <tr><td>POST</td><td><code>/api/guest/login</code></td><td>Guest login (conf# + last name)</td><td>None</td></tr>
+</table>
+
+<h2>5.2 Reservations</h2>
+<table>
+  <tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Roles</th></tr>
+  <tr><td>GET</td><td><code>/api/reservations</code></td><td>List all reservations</td><td>ADMIN, MANAGER, FRONT_DESK</td></tr>
+  <tr><td>POST</td><td><code>/api/reservations</code></td><td>Create reservation</td><td>ADMIN, MANAGER, FRONT_DESK</td></tr>
+  <tr><td>PATCH</td><td><code>/api/reservations/:id</code></td><td>Update reservation</td><td>ADMIN, MANAGER, FRONT_DESK</td></tr>
+  <tr><td>DELETE</td><td><code>/api/reservations/:id</code></td><td>Cancel reservation</td><td>ADMIN, MANAGER</td></tr>
+</table>
+
+<h2>5.3 Rooms</h2>
+<table>
+  <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+  <tr><td>GET</td><td><code>/api/rooms</code></td><td>List rooms with filters</td></tr>
+  <tr><td>POST</td><td><code>/api/rooms</code></td><td>Create room</td></tr>
+  <tr><td>PATCH</td><td><code>/api/rooms/:id/status</code></td><td>Update room status</td></tr>
+  <tr><td>GET</td><td><code>/api/rooms/availability</code></td><td>Check availability for dates</td></tr>
+</table>
+
+<h2>5.4 Guest App APIs</h2>
+<table>
+  <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+  <tr><td>POST</td><td><code>/api/guest/check-in</code></td><td>Digital check-in</td></tr>
+  <tr><td>POST</td><td><code>/api/guest/check-out</code></td><td>Digital check-out</td></tr>
+  <tr><td>GET</td><td><code>/api/guest/menu</code></td><td>Restaurant menu</td></tr>
+  <tr><td>POST</td><td><code>/api/guest/room-service</code></td><td>Place room service order</td></tr>
+  <tr><td>POST</td><td><code>/api/guest/spa/book</code></td><td>Book spa appointment</td></tr>
+  <tr><td>POST</td><td><code>/api/guest/concierge</code></td><td>Submit concierge request</td></tr>
+  <tr><td>POST</td><td><code>/api/guest/digital-key/activate</code></td><td>Activate digital key</td></tr>
+  <tr><td>POST</td><td><code>/api/guest/digital-key/unlock</code></td><td>Unlock room (QR/NFC)</td></tr>
+  <tr><td>PATCH</td><td><code>/api/guest/room-controls</code></td><td>Control room (lights, AC, TV)</td></tr>
+  <tr><td>GET</td><td><code>/api/guest/experiences</code></td><td>Local experiences guide</td></tr>
+  <tr><td>POST</td><td><code>/api/guest/experience-book</code></td><td>Book experience</td></tr>
+</table>
+
+<h2>5.5 Scheduling & HR</h2>
+<table>
+  <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+  <tr><td>GET</td><td><code>/api/shifts</code></td><td>Get shifts (date range, dept, user)</td></tr>
+  <tr><td>POST</td><td><code>/api/shifts</code></td><td>Create shift</td></tr>
+  <tr><td>PATCH</td><td><code>/api/shifts/:id</code></td><td>Update/reassign shift</td></tr>
+  <tr><td>POST</td><td><code>/api/shifts/auto-schedule</code></td><td>AI auto-generate schedule</td></tr>
+  <tr><td>GET</td><td><code>/api/shifts/demand-forecast</code></td><td>Demand forecast</td></tr>
+  <tr><td>GET</td><td><code>/api/shifts/conflicts</code></td><td>Conflict detection</td></tr>
+  <tr><td>POST</td><td><code>/api/shift-swaps</code></td><td>Create swap request</td></tr>
+  <tr><td>POST</td><td><code>/api/shift-swaps/:id/approve</code></td><td>Approve swap</td></tr>
+  <tr><td>GET</td><td><code>/api/labor/cost-analysis</code></td><td>Labor cost analysis</td></tr>
+  <tr><td>GET</td><td><code>/api/employee-preferences</code></td><td>Employee shift preferences</td></tr>
+</table>
+
+<h2>5.6 Finance & Payments</h2>
+<table>
+  <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+  <tr><td>GET</td><td><code>/api/finance/summary</code></td><td>Revenue/expense summary</td></tr>
+  <tr><td>POST</td><td><code>/api/payments/process</code></td><td>Process payment (multi-gateway)</td></tr>
+  <tr><td>GET</td><td><code>/api/currencies</code></td><td>Get exchange rates</td></tr>
+  <tr><td>POST</td><td><code>/api/currencies/convert</code></td><td>Convert between currencies</td></tr>
+</table>
+
+<h2>5.7 Notifications</h2>
+<table>
+  <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+  <tr><td>GET</td><td><code>/api/notifications</code></td><td>Get staff notifications</td></tr>
+  <tr><td>PATCH</td><td><code>/api/notifications/read</code></td><td>Mark as read</td></tr>
+  <tr><td>GET</td><td><code>/api/notification-preferences</code></td><td>Get notification preferences</td></tr>
+  <tr><td>GET</td><td><code>/api/guest/notifications</code></td><td>Get guest notifications</td></tr>
+  <tr><td>WS</td><td><code>/ws?token=JWT</code></td><td>Real-time WebSocket</td></tr>
+</table>
+
+<!-- SECTION 6 -->
+<div class="page-break"></div>
+<h1>6. Database Schema</h1>
+
+<h2>6.1 Core Tables</h2>
+<table>
+  <tr><th>Table</th><th>Purpose</th><th>Key Fields</th></tr>
+  <tr><td>users</td><td>Staff accounts</td><td>id, email, password_hash, role, department, is_active</td></tr>
+  <tr><td>guests</td><td>Guest profiles</td><td>id, first_name, last_name, email, phone, loyalty_tier</td></tr>
+  <tr><td>rooms</td><td>Room inventory</td><td>id, room_number, room_type_id, status, floor</td></tr>
+  <tr><td>room_types</td><td>Room categories</td><td>id, name, base_rate, max_guests, amenities</td></tr>
+  <tr><td>reservations</td><td>Bookings</td><td>id, guest_id, room_id, check_in, check_out, status</td></tr>
+  <tr><td>folios</td><td>Guest accounts</td><td>id, reservation_id, balance</td></tr>
+  <tr><td>folio_items</td><td>Charges/payments</td><td>id, folio_id, description, amount, category</td></tr>
+</table>
+
+<h2>6.2 Operations Tables</h2>
+<table>
+  <tr><th>Table</th><th>Purpose</th></tr>
+  <tr><td>housekeeping_tasks</td><td>Cleaning and inspection tasks</td></tr>
+  <tr><td>maintenance_requests</td><td>Maintenance work orders</td></tr>
+  <tr><td>restaurant_menu</td><td>F&B menu items</td></tr>
+  <tr><td>restaurant_orders</td><td>F&B orders including room service</td></tr>
+  <tr><td>spa_services</td><td>Spa treatment catalog</td></tr>
+  <tr><td>spa_appointments</td><td>Spa bookings</td></tr>
+  <tr><td>events</td><td>Banquet/conference events</td></tr>
+  <tr><td>guest_requests</td><td>Concierge and service requests</td></tr>
+</table>
+
+<h2>6.3 Scheduling Tables</h2>
+<table>
+  <tr><th>Table</th><th>Purpose</th></tr>
+  <tr><td>employee_shifts</td><td>Shift assignments (date, time, user)</td></tr>
+  <tr><td>employee_preferences</td><td>Preferred shift type, days, max hours</td></tr>
+  <tr><td>employee_pay_rates</td><td>Hourly rate, overtime/night/weekend premiums</td></tr>
+  <tr><td>shift_swaps</td><td>Swap/trade requests with approval workflow</td></tr>
+</table>
+
+<h2>6.4 Guest Experience Tables</h2>
+<table>
+  <tr><th>Table</th><th>Purpose</th></tr>
+  <tr><td>digital_keys</td><td>QR/NFC room keys with permissions</td></tr>
+  <tr><td>room_controls</td><td>IoT room state (lights, AC, TV, curtains)</td></tr>
+  <tr><td>key_access_log</td><td>Key usage audit trail</td></tr>
+  <tr><td>local_experiences</td><td>Attractions and activities catalog</td></tr>
+  <tr><td>experience_bookings</td><td>Guest experience bookings</td></tr>
+</table>
+
+<h2>6.5 System Tables</h2>
+<table>
+  <tr><th>Table</th><th>Purpose</th></tr>
+  <tr><td>notifications</td><td>In-app and real-time notifications</td></tr>
+  <tr><td>notification_preferences</td><td>Per-user notification settings</td></tr>
+  <tr><td>audit_logs</td><td>System audit trail (action, user, IP, timestamp)</td></tr>
+  <tr><td>hotel_config</td><td>System configuration (currencies, gateways)</td></tr>
+</table>
+
+<!-- SECTION 7 -->
+<div class="page-break"></div>
+<h1>7. Deployment Guide</h1>
+
+<h2>7.1 Prerequisites</h2>
+<ul>
+  <li>Node.js 18+ and npm</li>
+  <li>PostgreSQL 14+</li>
+  <li>Git</li>
+</ul>
+
+<h2>7.2 Environment Variables</h2>
+<pre><code># Backend (.env)
+DATABASE_URL=postgresql://user:pass@localhost:5432/rhosam_hotel
+JWT_SECRET=your-secure-secret-key
+PORT=5000
+NODE_ENV=production
+</code></pre>
+
+<h2>7.3 Installation</h2>
+<pre><code># Clone repository
+git clone https://github.com/your-org/rhosam-hotel-premium.git
+
+# Backend setup
+cd backend
+npm install
+npm run dev  # Development (auto-migrates and seeds)
+
+# Frontend setup
+cd ../frontend
+npm install
+npm run dev  # Development server on port 5173
+
+# Production build
+npm run build  # Outputs to dist/
+</code></pre>
+
+<h2>7.4 Default Credentials</h2>
+<table>
+  <tr><th>Email</th><th>Password</th><th>Role</th></tr>
+  <tr><td>admin@rhosamhotel.com</td><td>admin123</td><td>ADMIN</td></tr>
+  <tr><td>manager@rhosamhotel.com</td><td>manager123</td><td>MANAGER</td></tr>
+  <tr><td>frontdesk@rhosamhotel.com</td><td>frontdesk123</td><td>FRONT_DESK</td></tr>
+</table>
+
+<h2>7.5 Guest App Access</h2>
+<p>Navigate to <code>/guest</code> and login with:</p>
+<ul>
+  <li>Confirmation Number: <code>RH-XXXXXXXX</code> (from reservation)</li>
+  <li>Last Name: Guest's last name as on booking</li>
+</ul>
+
+<!-- SECTION 8 -->
+<div class="page-break"></div>
+<h1>8. Security & Compliance</h1>
+
+<h2>8.1 Authentication</h2>
+<ul>
+  <li>JWT tokens with 12-hour expiry (staff) / 24-hour (guest)</li>
+  <li>bcrypt password hashing (12 rounds)</li>
+  <li>Separate guest authentication namespace</li>
+  <li>Token stored in localStorage with auto-logout on 401</li>
+</ul>
+
+<h2>8.2 Authorization</h2>
+<ul>
+  <li>Role-based access control (RBAC) enforced on all endpoints</li>
+  <li>Property-scoped access for multi-property support</li>
+  <li>Guest access limited to own reservation data</li>
+</ul>
+
+<h2>8.3 Audit Trail</h2>
+<ul>
+  <li>Every API action logged with user, action, entity, details, IP, timestamp</li>
+  <li>Immutable audit logs (append-only)</li>
+  <li>Viewable in Settings → Audit Trail</li>
+</ul>
+
+<h2>8.4 Data Protection</h2>
+<ul>
+  <li>Passwords never stored in plaintext</li>
+  <li>Guest PII protected by role-based access</li>
+  <li>Database connection pooling with idle timeout</li>
+  <li>Input validation on all endpoints</li>
+  <li>SQL injection prevention via parameterized queries</li>
+</ul>
+
+<!-- SECTION 9 -->
+<div class="page-break"></div>
+<h1>9. Troubleshooting</h1>
+
+<h2>9.1 Common Issues</h2>
+<table>
+  <tr><th>Issue</th><th>Cause</th><th>Solution</th></tr>
+  <tr><td>Login fails</td><td>Wrong credentials or expired token</td><td>Check email/password, clear localStorage</td></tr>
+  <tr><td>API returns 401</td><td>JWT expired</td><td>Re-login to get new token</td></tr>
+  <tr><td>API returns 403</td><td>Insufficient role permissions</td><td>Check user role against endpoint requirements</td></tr>
+  <tr><td>WebSocket disconnects</td><td>Token expired or network issue</td><td>Auto-reconnects every 3 seconds</td></tr>
+  <tr><td>Build fails</td><td>Missing dependencies</td><td>Run <code>npm install</code> in both frontend/ and backend/</td></tr>
+  <tr><td>Database connection error</td><td>DATABASE_URL incorrect or PG not running</td><td>Verify PostgreSQL is running and .env is correct</td></tr>
+  <tr><td>Shift overlap error</td><td>Same employee scheduled twice</td><td>System auto-detects; use conflict panel to resolve</td></tr>
+</table>
+
+<!-- SECTION 10 -->
+<h1>10. Appendices</h1>
+
+<h2>10.1 Currency Codes</h2>
+<table>
+  <tr><th>Code</th><th>Currency</th><th>Symbol</th></tr>
+  <tr><td>NGN</td><td>Nigerian Naira</td><td>₦</td></tr>
+  <tr><td>USD</td><td>US Dollar</td><td>$</td></tr>
+  <tr><td>GBP</td><td>British Pound</td><td>£</td></tr>
+  <tr><td>EUR</td><td>Euro</td><td>€</td></tr>
+  <tr><td>AED</td><td>UAE Dirham</td><td>د.إ</td></tr>
+  <tr><td>ZAR</td><td>South African Rand</td><td>R</td></tr>
+  <tr><td>GHS</td><td>Ghanaian Cedi</td><td>₵</td></tr>
+  <tr><td>KES</td><td>Kenyan Shilling</td><td>KSh</td></tr>
+  <tr><td>CNY</td><td>Chinese Yuan</td><td>¥</td></tr>
+  <tr><td>INR</td><td>Indian Rupee</td><td>₹</td></tr>
+</table>
+
+<h2>10.2 Shift Types</h2>
+<table>
+  <tr><th>Type</th><th>Hours</th><th>Premium</th></tr>
+  <tr><td>Morning</td><td>06:00 – 14:00</td><td>Base rate</td></tr>
+  <tr><td>Afternoon</td><td>14:00 – 22:00</td><td>Base rate</td></tr>
+  <tr><td>Night</td><td>22:00 – 06:00</td><td>1.25× night premium</td></tr>
+  <tr><td>Full Day</td><td>08:00 – 18:00</td><td>Base rate (10h)</td></tr>
+  <tr><td>Split</td><td>08:00 – 12:00</td><td>Base rate (4h)</td></tr>
+</table>
+
+<h2>10.3 Payment Gateways</h2>
+<table>
+  <tr><th>Gateway</th><th>Coverage</th><th>Fee</th></tr>
+  <tr><td>Stripe</td><td>Global — Visa, Mastercard, Amex</td><td>2.9% + ₦100</td></tr>
+  <tr><td>Paystack</td><td>Africa — cards, bank, USSD</td><td>1.5% (capped ₦2,000)</td></tr>
+  <tr><td>Flutterwave</td><td>Pan-African — cards, mobile money</td><td>1.4%</td></tr>
+  <tr><td>Cash/Manual</td><td>Universal</td><td>No fee</td></tr>
+</table>
+
+<div class="footer">
+  <p>RHoSAM Hotel & Suites — Premium Management Platform Manual v2.0</p>
+  <p>© 2026 RHoSAM Hospitality. All rights reserved. Confidential.</p>
+</div>
+
+</body>
+</html>

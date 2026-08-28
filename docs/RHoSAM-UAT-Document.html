@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>RHoSAM Hotel — User Acceptance Testing (UAT) Document</title>
+<style>
+  @page { size: A4; margin: 20mm; }
+  @media print { body { font-size: 11pt; } .page-break { page-break-before: always; } }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; line-height: 1.6; color: #1e293b; max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+  h1 { font-size: 26px; color: #0f172a; border-bottom: 3px solid #8b5cf6; padding-bottom: 10px; margin: 30px 0 20px; }
+  h2 { font-size: 20px; color: #1e3a5f; margin: 25px 0 15px; border-left: 4px solid #8b5cf6; padding-left: 12px; }
+  h3 { font-size: 16px; color: #334155; margin: 20px 0 10px; }
+  p { margin: 8px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 12px; }
+  th { background: #4c1d95; color: white; padding: 8px 10px; text-align: left; font-weight: 600; }
+  td { padding: 7px 10px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+  tr:nth-child(even) { background: #f8fafc; }
+  code { background: #f1f5f9; padding: 2px 6px; border-radius: 3px; font-size: 11px; font-family: Consolas, monospace; }
+  .cover { text-align: center; padding: 60px 20px; background: linear-gradient(135deg, #4c1d95, #8b5cf6); color: white; border-radius: 12px; margin: 40px 0; }
+  .cover h1 { color: white; border: none; font-size: 32px; }
+  .pass { color: #16a34a; font-weight: 600; }
+  .fail { color: #dc2626; font-weight: 600; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+  .badge-crit { background: #fef2f2; color: #991b1b; }
+  .badge-high { background: #fef3c7; color: #92400e; }
+  .badge-med { background: #dbeafe; color: #1e40af; }
+  .toc { background: #f8fafc; padding: 20px 30px; border-radius: 8px; margin: 20px 0; }
+  .toc ul { list-style: none; }
+  .toc li { padding: 3px 0; }
+  .note { background: #f5f3ff; border-left: 4px solid #8b5cf6; padding: 10px 14px; border-radius: 0 6px 6px 0; margin: 12px 0; font-size: 12px; }
+  .scenario { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 12px 0; }
+  .scenario-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .scenario-title { font-weight: 700; font-size: 14px; color: #4c1d95; }
+  .step { padding: 6px 0 6px 20px; border-left: 2px solid #e2e8f0; margin: 4px 0; font-size: 12px; }
+  .step-num { font-weight: 700; color: #8b5cf6; }
+  .expected { background: #f0fdf4; padding: 6px 10px; border-radius: 4px; margin: 6px 0; font-size: 12px; border-left: 3px solid #22c55e; }
+  .actual { background: #fef3c7; padding: 6px 10px; border-radius: 4px; margin: 6px 0; font-size: 12px; border-left: 3px solid #f59e0b; }
+  .result-row { display: flex; gap: 10px; margin-top: 8px; }
+  .result-row select, .result-row input { padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 12px; }
+  .footer { text-align: center; color: #94a3b8; font-size: 11px; margin-top: 40px; padding-top: 15px; border-top: 1px solid #e2e8f0; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div style="font-size:42px;margin-bottom:15px;">✅</div>
+  <h1>User Acceptance Testing (UAT)</h1>
+  <p style="font-size:18px;color:#c4b5fd;">RHoSAM Hotel & Suites — Premium Management Platform</p>
+  <p style="margin-top:15px;">Version 2.0 — August 2026</p>
+  <p style="margin-top:20px;font-size:12px;">Prepared for: Hotel Management & Operations Team</p>
+</div>
+
+<div class="toc">
+  <h2>Table of Contents</h2>
+  <ul>
+    <li><strong>1.</strong> Document Overview</li>
+    <li><strong>2.</strong> UAT Strategy & Approach</li>
+    <li><strong>3.</strong> Test Environment & Access</li>
+    <li><strong>4.</strong> User Acceptance Scenarios — Hotel Administrator</li>
+    <li><strong>5.</strong> User Acceptance Scenarios — Front Desk Staff</li>
+    <li><strong>6.</strong> User Acceptance Scenarios — Housekeeping</li>
+    <li><strong>7.</strong> User Acceptance Scenarios — Restaurant Staff</li>
+    <li><strong>8.</strong> User Acceptance Scenarios — Manager</li>
+    <li><strong>9.</strong> User Acceptance Scenarios — Guest (Mobile App)</li>
+    <li><strong>10.</strong> User Acceptance Scenarios — Spa Therapist</li>
+    <li><strong>11.</strong> Cross-Role Integration Scenarios</li>
+    <li><strong>12.</strong> Usability & Accessibility Scenarios</li>
+    <li><strong>13.</strong> Performance Acceptance Criteria</li>
+    <li><strong>14.</strong> UAT Execution Log Template</li>
+    <li><strong>15.</strong> Defect Classification</li>
+    <li><strong>16.</strong> UAT Exit Criteria & Sign-Off</li>
+  </ul>
+</div>
+
+<!-- SECTION 1 -->
+<div class="page-break"></div>
+<h1>1. Document Overview</h1>
+
+<h2>1.1 Purpose</h2>
+<p>This document defines the User Acceptance Testing (UAT) plan for the RHoSAM Hotel & Suites Premium Management Platform. UAT validates that the system meets real-world business requirements from the perspective of actual hotel staff and guests. The business stakeholders (hotel management, department heads, and guest representatives) will execute these scenarios to formally accept the system for production deployment.</p>
+
+<h2>1.2 Scope</h2>
+<p>All user-facing functionality across admin portal, employee workflows, and guest mobile app. Focus areas:</p>
+<ul>
+  <li>Business workflow validation (booking → check-in → stay → check-out)</li>
+  <li>Guest experience validation (mobile app, digital key, room controls)</li>
+  <li>Operational efficiency (scheduling, housekeeping, maintenance)</li>
+  <li>Financial accuracy (payments, multi-currency, folio management)</li>
+  <li>Real-time functionality (notifications, room controls, WebSocket)</li>
+  <li>Usability and user experience</li>
+</ul>
+
+<h2>1.3 UAT Participants</h2>
+<table>
+  <tr><th>Role</th><th>Responsibility</th><th>Availability</th></tr>
+  <tr><td>Hotel General Manager</td><td>Final sign-off authority</td><td>Review & approval</td></tr>
+  <tr><td>Front Desk Supervisor</td><td>Execute front desk scenarios</td><td>2 full days</td></tr>
+  <tr><td>Housekeeping Manager</td><td>Execute housekeeping scenarios</td><td>1 full day</td></tr>
+  <tr><td>Restaurant Manager</td><td>Execute F&B scenarios</td><td>1 full day</td></tr>
+  <tr><td>Spa Manager</td><td>Execute spa scenarios</td><td>0.5 day</td></tr>
+  <tr><td>Finance Officer</td><td>Execute payment & finance scenarios</td><td>1 full day</td></tr>
+  <tr><td>IT Administrator</td><td>Technical support, environment management</td><td>Full UAT period</td></tr>
+  <tr><td>QA Facilitator</td><td>Coordinate execution, track defects</td><td>Full UAT period</td></tr>
+</table>
+
+<h2>1.4 UAT Schedule</h2>
+<table>
+  <tr><th>Phase</th><th>Duration</th><th>Focus</th></tr>
+  <tr><td>Preparation</td><td>1 day</td><td>Environment setup, test data verification, walkthrough</td></tr>
+  <tr><td>Round 1 Execution</td><td>3 days</td><td>All scenarios by role</td></tr>
+  <tr><td>Defect Fix & Retest</td><td>2 days</td><td>Critical/High defect resolution</td></tr>
+  <tr><td>Round 2 Execution</td><td>1 day</td><td>Retest failed scenarios</td></tr>
+  <tr><td>Sign-Off</td><td>1 day</td><td>Final review and formal acceptance</td></tr>
+</table>
+
+<!-- SECTION 2 -->
+<h1>2. UAT Strategy & Approach</h1>
+
+<h2>2.1 Test Approach</h2>
+<p>UAT uses <strong>realistic business scenarios</strong> executed by actual end users in a test environment seeded with representative data. Each scenario follows a complete business workflow from the user's perspective — no API-level or technical testing.</p>
+
+<h2>2.2 Pass/Fail Criteria</h2>
+<table>
+  <tr><th>Result</th><th>Definition</th></tr>
+  <tr><td class="pass">PASS</td><td>All expected outcomes met, user can complete workflow without assistance</td></tr>
+  <tr><td class="fail">FAIL — Blocker</td><td>User cannot complete critical business workflow</td></tr>
+  <tr><td class="fail">FAIL — Major</td><td>Workflow completable but with significant workaround or data error</td></tr>
+  <tr><td>FAIL — Minor</td><td>Cosmetic issue, non-critical, doesn't impede workflow</td></tr>
+</table>
+
+<!-- SECTION 3 -->
+<div class="page-break"></div>
+<h1>3. Test Environment & Access</h1>
+
+<h3>Login Credentials</h3>
+<table>
+  <tr><th>User</th><th>Email</th><th>Password</th><th>Role</th></tr>
+  <tr><td>Administrator</td><td>admin@rhosamhotel.com</td><td>admin123</td><td>ADMIN</td></tr>
+  <tr><td>Manager</td><td>manager@rhosamhotel.com</td><td>manager123</td><td>MANAGER</td></tr>
+  <tr><td>Front Desk</td><td>frontdesk@rhosamhotel.com</td><td>frontdesk123</td><td>FRONT_DESK</td></tr>
+  <tr><td>Housekeeping</td><td>housekeeping@rhosamhotel.com</td><td>housekeeping123</td><td>HOUSEKEEPING</td></tr>
+  <tr><td>Restaurant</td><td>restaurant@rhosamhotel.com</td><td>restaurant123</td><td>RESTAURANT</td></tr>
+</table>
+
+<h3>Guest App Access</h3>
+<table>
+  <tr><th>Guest Name</th><th>Confirmation #</th><th>Last Name</th><th>Room</th></tr>
+  <tr><td>Adaeze Nwosu</td><td>RH-DEMO-001</td><td>Nwosu</td><td>Royal Suite 1008</td></tr>
+  <tr><td>David Ogundimu</td><td>RH-DEMO-002</td><td>Ogundimu</td><td>Executive King 912</td></tr>
+</table>
+
+<!-- SECTION 4 -->
+<div class="page-break"></div>
+<h1>4. User Acceptance Scenarios — Hotel Administrator</h1>
+
+<div class="scenario">
+  <div class="scenario-header">
+    <div class="scenario-title">UAT-ADMIN-001: System Login & Dashboard Overview</div>
+    <span class="badge badge-crit">CRITICAL</span>
+  </div>
+  <p><strong>Goal:</strong> Administrator can log in and view the live hotel dashboard.</p>
+  <p><strong>Pre-condition:</strong> System is running, database is seeded.</p>
+  <div class="step"><span class="step-num">1.</span> Open browser and navigate to the application URL</div>
+  <div class="step"><span class="step-num">2.</span> Enter email: admin@rhosamhotel.com</div>
+  <div class="step"><span class="step-num">3.</span> Enter password: admin123</div>
+  <div class="step"><span class="step-num">4.</span> Click "Sign In"</div>
+  <div class="step"><span class="step-num">5.</span> Verify dashboard displays with occupancy %, revenue, arrivals/departures</div>
+  <div class="expected"><strong>Expected:</strong> Login successful, dashboard shows live metrics, user name "SAMSON" displayed, all navigation modules visible</div>
+  <p><strong>Acceptance Criteria:</strong> Dashboard loads within 3 seconds. All KPIs show realistic values. Navigation sidebar shows all modules for admin role.</p>
+</div>
+
+<div class="scenario">
+  <div class="scenario-header">
+    <div class="scenario-title">UAT-ADMIN-002: Create New Employee with Role</div>
+    <span class="badge badge-high">HIGH</span>
+  </div>
+  <p><strong>Goal:</strong> Admin can add a new team member with proper role and department.</p>
+  <div class="step"><span class="step-num">1.</span> Navigate to Team Management</div>
+  <div class="step"><span class="step-num">2.</span> Click "Add Member"</div>
+  <div class="step"><span class="step-num">3.</span> Enter name: "Test Employee"</div>
+  <div class="step"><span class="step-num">4.</span> Enter email: test@rhosamhotel.com</div>
+  <div class="step"><span class="step-num">5.</span> Enter password: test123</div>
+  <div class="step"><span class="step-num">6.</span> Select role: HOUSEKEEPING</div>
+  <div class="step"><span class="step-num">7.</span> Select department: Housekeeping</div>
+  <div class="step"><span class="step-num">8.</span> Click "Create"</div>
+  <div class="expected"><strong>Expected:</strong> Employee created, appears in team list with HOUSEKEEPING role badge, can login with new credentials</div>
+</div>
+
+<div class="scenario">
+  <div class="scenario-header">
+    <div class="scenario-title">UAT-ADMIN-003: Configure Currency Settings</div>
+    <span class="badge badge-high">HIGH</span>
+  </div>
+  <p><strong>Goal:</strong> Admin can change base currency and verify all monetary displays update.</p>
+  <div class="step"><span class="step-num">1.</span> Navigate to Settings</div>
+  <div class="step"><span class="step-num">2.</span> Find "Currency Settings" section</div>
+  <div class="step"><span class="step-num">3.</span> Change base currency from NGN to USD</div>
+  <div class="step"><span class="step-num">4.</span> Navigate to Finance page</div>
+  <div class="step"><span class="step-num">5.</span> Verify all amounts now display in USD ($)</div>
+  <div class="step"><span class="step-num">6.</span> Change back to NGN</div>
+  <div class="expected"><strong>Expected:</strong> Currency changes propagate to all monetary displays across Finance, Reservations, and reports within 2 seconds</div>
+</div>
+
+<!-- SECTION 5 -->
+<div class="page-break"></div>
+<h1>5. User Acceptance Scenarios — Front Desk Staff</h1>
+
+<div class="scenario">
+  <div class="scenario-header">
+    <div class="scenario-title">UAT-FD-001: Complete Guest Stay Workflow</div>
+    <span class="badge badge-crit">CRITICAL</span>
+  </div>
+  <p><strong>Goal:</strong> Front desk can process a complete guest stay from booking to checkout.</p>
+  <div class="step"><span class="step-num">1.</span> Login as Front Desk (frontdesk@rhosamhotel.com / frontdesk123)</div>
+  <div class="step"><span class="step-num">2.</span> Navigate to Reservations → Click "New Reservation"</div>
+  <div class="step"><span class="step-num">3.</span> Create guest inline: Name "Test Guest", Email "test@guest.com"</div>
+  <div class="step"><span class="step-num">4.</span> Select room type: Executive King</div>
+  <div class="step"><span class="step-num">5.</span> Select dates: Today + 2 nights</div>
+  <div class="step"><span class="step-num">6.</span> Click "Create Reservation" → Confirmation number generated</div>
+  <div class="step"><span class="step-num">7.</span> Navigate to Front Desk → Find guest in arrivals</div>
+  <div class="step"><span class="step-num">8.</span> Click "Check In" → Room status changes to OCCUPIED</div>
+  <div class="step"><span class="step-num">9.</span> Navigate back to Front Desk → Find guest in departures (advance 2 days)</div>
+  <div class="step"><span class="step-num">10.</span> Click "Check Out" → Room status changes to DIRTY</div>
+  <div class="expected"><strong>Expected:</strong> Full workflow completes without errors. Confirmation number shown. Room status transitions correctly. Guest appears in arrivals, then departures. Check-out is smooth.</div>
+</div>
+
+<div class="scenario">
+  <div class="scenario-header">
+    <div class="scenario-title">UAT-FD-002: Process Room Service Payment</div>
+    <span class="badge badge-high">HIGH</span>
+  </div>
+  <p><strong>Goal:</strong> Front desk can process a payment for room service charges in different currencies.</p>
+  <div class="step"><span class="step-num">1.</span> Login as Front Desk</div>
+  <div class="step"><span class="step-num">2.</span> Navigate to Finance</div>
+  <div class="step"><span class="step-num">3.</span> Click "Process Payment"</div>
+  <div class="step"><span class="step-num">4.</span> Select currency: USD</div>
+  <div class="step"><span class="step-num">5.</span> Enter amount: 100</div>
+  <div class="step"><span class="step-num">6.</span> Select gateway: Manual (Cash)</div>
+  <div class="step"><span class="step-num">7.</span> Click "Pay"</div>
+  <div class="expected"><strong>Expected:</strong> Payment processed, amount shows $100.00 USD, transaction appears in payment history with correct conversion to base currency</div>
+</div>
+
+<!-- SECTION 6 -->
+<h1>6. User Acceptance Scenarios — Housekeeping</h1>
+
+<div class="scenario">
+  <div class="scenario-header">
+    <div class="scenario-title">UAT-HK-001: View and Complete Cleaning Tasks</div>
+    <span class="badge badge-high">HIGH</span>
+  </div>
+  <p><strong>Goal:</strong> Housekeeping staff can view assigned tasks and mark rooms as clean.</p>
+  <div class="step"><span class="step-num">1.</span> Login as Housekeeping staff</div>
+  <div class="step"><span class="step-num">2.</span> Navigate to Housekeeping module</div>
+  <div class="step"><span class="step-num">3.</span> View task board with pending tasks</div>
+  <div class="step"><span class="step-num">4.</span> Find a DIRTY room task</div>
+  <div class="step"><span class="step-num">5.</span> Click to mark as CLEAN</div>
+  <div class="step"><span class="step-num">6.</span> Verify task moves to completed section</div>
+  <div class="expected"><strong>Expected:</strong> Tasks displayed with room number, priority, status. Status update works. Room status changes to CLEAN in the system. Audit log records the action.</div>
+</div>
+
+<!-- SECTION 7 -->
+<h1>7. User Acceptance Scenarios — Restaurant Staff</h1>
+
+<div class="scenario">
+  <div class="scenario-header">
+    <div class="scenario-title">UAT-FB-001: Process Room Service Order</div>
+    <span class="badge badge-crit">CRITICAL</span>
+  </div>
+  <p><strong>Goal:</strong> Restaurant staff receives room service order notification and updates status.</p>
+  <div class="step"><span class="step-num">1.</span> (Guest places room service order via mobile app)</div>
+  <div class="step"><span class="step-num">2.</span> Login as Restaurant staff</div>
+  <div class="step"><span class="step-num">3.</span> Verify notification received for new order</div>
+  <div class="step"><span class="step-num">4.</span> Navigate to F&B → Orders</div>
+  <div class="step"><span class="step-num">5.</span> Find the new order, view items</div>
+  <div class="step"><span class="step-num">6.</span> Update status to IN_PROGRESS</div>
+  <div class="step"><span class="step-num">7.</span> Update status to COMPLETED</div>
+  <div class="expected"><strong>Expected:</strong> Order appears with items, room number, total. Status updates trigger guest notification. Order history shows correct timeline.</div>
+</div>
+
+<!-- SECTION 8 -->
+<div class="page-break"></div>
+<h1>8. User Acceptance Scenarios — Manager</h1>
+
+<div class="scenario">
+  <div class="scenario-header">
+    <div class="scenario-title">UAT-MGR-001: AI Auto-Schedule with Preferences</div>
+    <span class="badge badge-crit">CRITICAL</span>
+  </div>
+  <p><strong>Goal:</strong> Manager uses AI to generate an optimal shift schedule and reviews suggestions.</p>
+  <div class="step"><span class="step-num">1.</span> Login as Manager</div>
+  <div class="step"><span class="step-num">2.</span> Navigate to Scheduling</div>
+  <div class="step"><span class="step-num">3.</span> Click "AI Auto-Schedule"</div>
+  <div class="step"><span class="step-num">4.</span> Review Demand Forecast tab (occupancy, staffing needs)</div>
+  <div class="step"><span class="step-num">5.</span> Review Preferences tab (employee preferences)</div>
+  <div class="step"><span class="step-num">6.</span> Go to Generate tab → Click "Generate Optimal Schedule"</div>
+  <div class="step"><span class="step-num">7.</span> Review results: shifts created, warnings, summary</div>
+  <div class="step"><span class="step-num">8.</span> Verify calendar populated with color-coded shift cards</div>
+  <div class="expected"><strong>Expected:</strong> AI generates shifts respecting employee preferences, no overlaps, departments adequately staffed. Warnings shown for any gaps. Calendar visually populated.</div>
+</div>
+
+<div class="scenario">
+  <div class="scenario-header">
+    <div class="scenario-title">UAT-MGR-002: Approve Shift Swap Request</div>
+    <span class="badge badge-high">HIGH</span>
+  </div>
+  <p><strong>Goal:</strong> Manager reviews and approves an employee's shift swap request.</p>
+  <div class="step"><span class="step-num">1.</span> (Employee submits swap request via scheduling calendar)</div>
+  <div class="step"><span class="step-num">2.</span> Login as Manager</div>
+  <div class="step"><span class="step-num">3.</span> Navigate to Swaps</div>
+  <div class="step"><span class="step-num">4.</span> Find pending swap request</div>
+  <div class="step"><span class="step-num">5.</span> Click to view details (both shifts side-by-side)</div>
+  <div class="step"><span class="step-num">6.</span> Add reviewer notes: "Approved — coverage adequate"</div>
+  <div class="step"><span class="step-num">7.</span> Click "Approve"</div>
+  <div class="step"><span class="step-num">8.</span> Navigate to Scheduling → Verify shifts swapped on calendar</div>
+  <div class="expected"><strong>Expected:</strong> Swap details clearly displayed. Approval executes the trade. Both employees' shifts updated on calendar. Status changes to APPROVED.</div>
+</div>
+
+<div class="scenario">
+  <div class="scenario-header">
+    <div class="scenario-title">UAT-MGR-003: View Conflict Alerts and Labor Costs</div>
+    <span class="badge badge-high">HIGH</span>
+  </div>
+  <p><strong>Goal:</strong> Manager reviews schedule health and labor cost analysis.</p>
+  <div class="step"><span class="step-num">1.</span> Login as Manager</div>
+  <div class="step"><span class="step-num">2.</span> Navigate to Scheduling</div>
+  <div class="step"><span class="step-num">3.</span> Click "Conflicts" button → Review conflict panel</div>
+  <div class="step"><span class="step-num">4.</span> Note any critical/warning issues</div>
+  <div class="step"><span class="step-num">5.</span> Close conflict panel</div>
+  <div class="step"><span class="step-num">6.</span> Click "Costs" button → Review labor cost analysis</div>
+  <div class="step"><span class="step-num">7.</span> Review total cost, department breakdown, optimization suggestions</div>
+  <div class="expected"><strong>Expected:</strong> Conflict panel shows clear categorized issues with severity. Cost panel shows total cost, regular/overtime/premium breakdown. Optimization suggestions with potential savings displayed.</div>
+</div>
+
+<!-- SECTION 9 -->
+<div class="page-break"></div>
+<h1>9. User Acceptance Scenarios — Guest (Mobile App)</h1>
+
+<div class="scenario">
+  <div class="scenario-header">
+    <div class="scenario-title">UAT-GUEST-001: Complete Guest Digital Journey</div>
+    <span class="badge badge-crit">CRITICAL</span>
+  </div>
+  <p><strong>Goal:</strong> Guest completes entire digital journey from login to checkout.</p>
+  <div class="step"><span class="step-num">1.</span> Navigate to /guest on mobile device</div>
+  <div class="step"><span class="step-num">2.</span> Enter confirmation: RH-DEMO-001, Last Name: Nwosu</div>
+  <div class="step"><span class="step-num">3.</span> Click "Access My Stay"</div>
+  <div class="step"><span class="step-num">4.</span> View home screen with room details, check-in/out dates</div>
+  <div class="step"><span class="step-num">5.</span> Click "Digital Check-in" → Room unlocked</div>
+  <div class="step"><span class="step-num">6.</span> Navigate to Key tab → View QR code</div>
+  <div class="step"><span class="step-num">7.</span> Navigate to Room tab → Toggle lights, adjust AC temperature</div>
+  <div class="step"><span class="step-num">8.</span> Navigate to Dining tab → Add items to cart → Place room service order</div>
+  <div class="step"><span class="step-num">9.</span> Navigate to Explore tab → View experiences → Book an experience</div>
+  <div class="step"><span class="step-num">10.</span> Navigate to Profile → View folio → Submit feedback</div>
+  <div class="step"><span class="step-num">11.</span> Return to Home → Click "Check Out"</div>
+  <div class="expected"><strong>Expected:</strong> All screens load smoothly. Check-in/out works. Digital key activates. Room controls respond. Room service order placed. Experience booked. Feedback submitted. Checkout completes. All data persists.</div>
+</div>
+
+<div class="scenario">
+  <div class="scenario-header">
+    <div class="scenario-title">UAT-GUEST-002: Real-Time Room Service Notification</div>
+    <span class="badge badge-crit">CRITICAL</span>
+  </div>
+  <p><strong>Goal:</strong> Guest receives real-time notification when room service order status changes.</p>
+  <div class="step"><span class="step-num">1.</span> Login as guest on mobile app</div>
+  <div class="step"><span class="step-num">2.</span> Navigate to Dining → Place room service order</div>
+  <div class="step"><span class="step-num">3.</span> (On separate device/browser, login as Restaurant staff)</div>
+  <div class="step"><span class="step-num">4.</span> Update order status to COMPLETED</div>
+  <div class="step"><span class="step-num">5.</span> Return to guest mobile app</div>
+  <div class="step"><span class="step-num">6.</span> Verify toast notification appears: "Your order is ready for delivery"</div>
+  <div class="expected"><strong>Expected:</strong> Guest receives push notification within 2 seconds of status change. Toast shows with correct order details. Notification bell shows unread count.</div>
+</div>
+
+<div class="scenario">
+  <div class="scenario-header">
+    <div class="scenario-title">UAT-GUEST-003: Digital Room Key Unlock</div>
+    <span class="badge badge-high">HIGH</span>
+  </div>
+  <p><strong>Goal:</strong> Guest can unlock room using digital key (NFC simulation and QR code).</p>
+  <div class="step"><span class="step-num">1.</span> Login as guest → Navigate to Key tab</div>
+  <div class="step"><span class="step-num">2.</span> Click "Tap to Unlock" (NFC simulation)</div>
+  <div class="step"><span class="step-num">3.</span> Verify green pulsing animation → "Room unlocked!" message</div>
+  <div class="step"><span class="step-num">4.</span> Click "QR Code" → Verify QR pattern displayed with key code</div>
+  <div class="step"><span class="step-num">5.</span> Check Access History → Verify unlock logged</div>
+  <div class="expected"><strong>Expected:</strong> NFC unlock works with animation feedback. QR code generates correctly. Access log records both unlock methods with timestamps.</div>
+</div>
+
+<div class="scenario">
+  <div class="scenario-header">
+    <div class="scenario-title">UAT-GUEST-004: Room Controls (Lights, AC, TV)</div>
+    <span class="badge badge-high">HIGH</span>
+  </div>
+  <p><strong>Goal:</strong> Guest controls room environment via mobile app.</p>
+  <div class="step"><span class="step-num">1.</span> Login as guest → Navigate to Room tab</div>
+  <div class="step"><span class="step-num">2.</span> Toggle "Main Lights" on/off</div>
+  <div class="step"><span class="step-num">3.</span> Toggle "Bedroom" lights on</div>
+  <div class="step"><span class="step-num">4.</span> Adjust AC temperature to 20°C using +/- buttons</div>
+  <div class="step"><span class="step-num">5.</span> Change AC mode to "COOL"</div>
+  <div class="step"><span class="step-num">6.</span> Turn TV on → Adjust channel → Adjust volume</div>
+  <div class="step"><span class="step-num">7.</span> Toggle "Do Not Disturb" on</div>
+  <div class="step"><span class="step-num">8.</span> Close and reopen Room tab → Verify all settings persisted</div>
+  <div class="expected"><strong>Expected:</strong> All toggles respond immediately. Temperature display updates. TV controls work. DND state persists. "Saving..." indicator shown during updates. State maintained across tab switches.</div>
+</div>
+
+<!-- SECTION 10 -->
+<h1>10. User Acceptance Scenarios — Spa Therapist</h1>
+
+<div class="scenario">
+  <div class="scenario-header">
+    <div class="scenario-title">UAT-SPA-001: Manage Spa Appointments</div>
+    <span class="badge badge-med">MEDIUM</span>
+  </div>
+  <p><strong>Goal:</strong> Spa staff manages appointment status and guest receives notifications.</p>
+  <div class="step"><span class="step-num">1.</span> (Guest books spa appointment via mobile app)</div>
+  <div class="step"><span class="step-num">2.</span> Login as Manager</div>
+  <div class="step"><span class="step-num">3.</span> Navigate to Spa & Wellness</div>
+  <div class="step"><span class="step-num">4.</span> Find new appointment → Assign therapist</div>
+  <div class="step"><span class="step-num">5.</span> Update status to CONFIRMED</div>
+  <div class="step"><span class="step-num">6.</span> Verify guest receives confirmation notification</div>
+  <div class="expected"><strong>Expected:</strong> Appointment visible with service name, date, time. Therapist assigned. Status update triggers guest notification. Appointment list updates.</div>
+</div>
+
+<!-- SECTION 11 -->
+<div class="page-break"></div>
+<h1>11. Cross-Role Integration Scenarios</h1>
+
+<div class="scenario">
+  <div class="scenario-header">
+    <div class="scenario-title">UAT-XROLE-001: Full Guest Lifecycle (All Roles)</div>
+    <span class="badge badge-crit">CRITICAL</span>
+  </div>
+  <p><strong>Goal:</strong> Complete guest lifecycle involving all hotel departments.</p>
+  <p><strong>Participants:</strong> Front Desk, Housekeeping, Restaurant, Spa, Manager</p>
+  <div class="step"><span class="step-num">1.</span> <strong>[Front Desk]</strong> Create reservation for new guest</div>
+  <div class="step"><span class="step-num">2.</span> <strong>[Guest]</strong> Receive confirmation, login to mobile app</div>
+  <div class="step"><span class="step-num">3.</span> <strong>[Guest]</strong> Digital check-in → Key activated</div>
+  <div class="step"><span class="step-num">4.</span> <strong>[Housekeeping]</strong> Room cleaned and inspected</div>
+  <div class="step"><span class="step-num">5.</span> <strong>[Guest]</strong> Controls room lights and AC via app</div>
+  <div class="step"><span class="step-num">6.</span> <strong>[Guest]</strong> Orders room service</div>
+  <div class="step"><span class="step-num">7.</span> <strong>[Restaurant]</strong> Receives notification, prepares order</div>
+  <div class="step"><span class="step-num">8.</span> <strong>[Restaurant]</strong> Marks order completed → Guest notified</div>
+  <div class="step"><span class="step-num">9.</span> <strong>[Guest]</strong> Books spa appointment</div>
+  <div class="step"><span class="step-num">10.</span> <strong>[Manager]</strong> Confirms spa appointment → Guest notified</div>
+  <div class="step"><span class="step-num">11.</span> <strong>[Guest]</strong> Books local experience via concierge</div>
+  <div class="step"><span class="step-num">12.</span> <strong>[Manager]</strong> Reviews experience booking</div>
+  <div class="step"><span class="step-num">13.</span> <strong>[Guest]</strong> Digital check-out</div>
+  <div class="step"><span class="step-num">14.</span> <strong>[Housekeeping]</strong> Room marked for cleaning</div>
+  <div class="step"><span class="step-num">15.</span> <strong>[Finance]</strong> Verify folio has all charges</div>
+  <div class="expected"><strong>Expected:</strong> Every handoff between departments works seamlessly. Notifications delivered at each step. Guest experience is smooth end-to-end. Financial records are accurate. Audit trail is complete.</div>
+</div>
+
+<!-- SECTION 12 -->
+<h1>12. Usability & Accessibility Scenarios</h1>
+
+<table>
+  <tr><th>ID</th><th>Scenario</th><th>Acceptance Criteria</th><th>Priority</th><th>Status</th></tr>
+  <tr>
+    <td>UAT-USAB-001</td>
+    <td>Mobile responsiveness — Guest app on phone</td>
+    <td>All screens render correctly on 375px width. No horizontal scroll. Buttons are tappable (min 44px). Text readable without zoom.</td>
+    <td><span class="badge badge-crit">CRITICAL</span></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>UAT-USAB-002</td>
+    <td>Mobile responsiveness — Admin on tablet</td>
+    <td>Admin portal responsive on 768px width. Sidebar collapses to hamburger menu. Tables scroll horizontally.</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>UAT-USAB-003</td>
+    <td>Dark mode toggle</td>
+    <td>Dark mode applies across all screens. Text remains readable. No contrast issues. Toggle persists across sessions.</td>
+    <td><span class="badge badge-med">MEDIUM</span></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>UAT-USAB-004</td>
+    <td>Navigation — new user can find all modules</td>
+    <td>User unfamiliar with system can locate all 15+ modules within 60 seconds via sidebar navigation.</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>UAT-USAB-005</td>
+    <td>Error messages are helpful</td>
+    <td>When a form submission fails, user sees a clear error message explaining what went wrong and how to fix it.</td>
+    <td><span class="badge badge-high">HIGH</span></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>UAT-USAB-006</td>
+    <td>Search functionality</td>
+    <td>Global search finds guests by name, rooms by number, and reservations by confirmation number within 2 seconds.</td>
+    <td><span class="badge badge-med">MEDIUM</span></td>
+    <td></td>
+  </tr>
+</table>
+
+<!-- SECTION 13 -->
+<h1>13. Performance Acceptance Criteria</h1>
+
+<table>
+  <tr><th>Metric</th><th>Target</th><th>Measurement</th></tr>
+  <tr><td>Login page load</td><td>< 2 seconds</td><td>Time from page load to interactive</td></tr>
+  <tr><td>Dashboard load</td><td>< 3 seconds</td><td>Time from navigation to all KPIs visible</td></tr>
+  <tr><td>API response time</td><td>< 500ms (95th percentile)</td><td>Server response time for standard queries</td></tr>
+  <tr><td>WebSocket notification delivery</td><td>< 2 seconds</td><td>Time from event trigger to client receipt</td></tr>
+  <tr><td>Room controls update</td><td>< 1 second</td><td>Time from toggle to state persisted</td></tr>
+  <tr><td>Guest mobile app navigation</td><td>< 1 second</td><td>Time between tab switches</td></tr>
+  <tr><td>Search results</td><td>< 2 seconds</td><td>Time from query to results displayed</td></tr>
+  <tr><td>AI auto-schedule generation</td><td>< 10 seconds</td><td>Time for full week schedule generation</td></tr>
+</table>
+
+<!-- SECTION 14 -->
+<div class="page-break"></div>
+<h1>14. UAT Execution Log Template</h1>
+
+<table>
+  <tr><th>Scenario ID</th><th>Executed By</th><th>Date</th><th>Result</th><th>Defect ID</th><th>Notes</th></tr>
+  <tr><td>UAT-ADMIN-001</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>UAT-ADMIN-002</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>UAT-ADMIN-003</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>UAT-FD-001</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>UAT-FD-002</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>UAT-HK-001</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>UAT-FB-001</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>UAT-MGR-001</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>UAT-MGR-002</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>UAT-MGR-003</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>UAT-GUEST-001</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>UAT-GUEST-002</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>UAT-GUEST-003</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>UAT-GUEST-004</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>UAT-SPA-001</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>UAT-XROLE-001</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>UAT-USAB-001</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>UAT-USAB-002</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>UAT-USAB-003</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>UAT-USAB-004</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>UAT-USAB-005</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>UAT-USAB-006</td><td></td><td></td><td></td><td></td><td></td></tr>
+</table>
+
+<!-- SECTION 15 -->
+<h1>15. Defect Classification</h1>
+
+<table>
+  <tr><th>Severity</th><th>Definition</th><th>Impact on UAT</th></tr>
+  <tr><td><span class="badge badge-crit">CRITICAL</span></td><td>System crash, data loss, security breach, or complete workflow blockage</td><td>UAT halted until fixed and retested</td></tr>
+  <tr><td><span class="badge badge-high">HIGH</span></td><td>Major feature not working correctly, significant data error, or major UX issue</td><td>Must be fixed before UAT sign-off</td></tr>
+  <tr><td><span class="badge badge-med">MEDIUM</span></td><td>Feature works with workaround, cosmetic issue, or minor data discrepancy</td><td>Should be fixed, may sign-off with known issues</td></tr>
+  <tr><td>LOW</td><td>Minor cosmetic, typo, or non-functional enhancement</td><td>Logged for future sprint, not blocking</td></tr>
+</table>
+
+<!-- SECTION 16 -->
+<div class="page-break"></div>
+<h1>16. UAT Exit Criteria & Sign-Off</h1>
+
+<h2>16.1 Exit Criteria</h2>
+<table>
+  <tr><th>Criterion</th><th>Required</th><th>Actual</th><th>Met?</th></tr>
+  <tr><td>All CRITICAL scenarios passed</td><td>100%</td><td></td><td></td></tr>
+  <tr><td>All HIGH scenarios passed</td><td>100%</td><td></td><td></td></tr>
+  <tr><td>Overall pass rate</td><td>≥ 90%</td><td></td><td></td></tr>
+  <tr><td>No open CRITICAL defects</td><td>0</td><td></td><td></td></tr>
+  <tr><td>No open HIGH defects</td><td>0</td><td></td><td></td></tr>
+  <tr><td>Performance criteria met</td><td>100%</td><td></td><td></td></tr>
+  <tr><td>Mobile responsiveness verified</td><td>Yes</td><td></td><td></td></tr>
+  <tr><td>Guest mobile app complete journey</td><td>Passed</td><td></td><td></td></tr>
+  <tr><td>Real-time notifications working</td><td>Yes</td><td></td><td></td></tr>
+</table>
+
+<h2>16.2 Known Issues (if any)</h2>
+<table>
+  <tr><th>ID</th><th>Description</th><th>Severity</th><th>Workaround</th><th>Planned Fix</th></tr>
+  <tr><td></td><td></td><td></td><td></td><td></td></tr>
+</table>
+
+<h2>16.3 Formal Sign-Off</h2>
+<p>By signing below, the undersigned confirm that the RHoSAM Hotel & Suites Premium Management Platform has been reviewed and meets the acceptance criteria for production deployment.</p>
+
+<table>
+  <tr><th>Role</th><th>Name</th><th>Signature</th><th>Date</th><th>Decision</th></tr>
+  <tr><td>Hotel General Manager</td><td></td><td></td><td></td><td>☐ Accept ☐ Reject ☐ Conditional</td></tr>
+  <tr><td>Front Desk Supervisor</td><td></td><td></td><td></td><td>☐ Accept ☐ Reject ☐ Conditional</td></tr>
+  <tr><td>Housekeeping Manager</td><td></td><td></td><td></td><td>☐ Accept ☐ Reject ☐ Conditional</td></tr>
+  <tr><td>Restaurant Manager</td><td></td><td></td><td></td><td>☐ Accept ☐ Reject ☐ Conditional</td></tr>
+  <tr><td>Finance Officer</td><td></td><td></td><td></td><td>☐ Accept ☐ Reject ☐ Conditional</td></tr>
+  <tr><td>IT Administrator</td><td></td><td></td><td></td><td>☐ Accept ☐ Reject ☐ Conditional</td></tr>
+  <tr><td>QA Facilitator</td><td></td><td></td><td></td><td>☐ Accept ☐ Reject ☐ Conditional</td></tr>
+</table>
+
+<h3>Conditional Acceptance Conditions (if applicable):</h3>
+<p>_______________________________________________________________</p>
+<p>_______________________________________________________________</p>
+<p>_______________________________________________________________</p>
+
+<div class="footer">
+  <p>RHoSAM Hotel & Suites — UAT Document v2.0</p>
+  <p>© 2026 RHoSAM Hospitality. Confidential.</p>
+</div>
+
+</body>
+</html>
