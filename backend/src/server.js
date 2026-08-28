@@ -4007,6 +4007,40 @@ app.post("/api/guest/spa/book", guestAuth, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+// Guest: cancel spa appointment
+app.delete("/api/guest/spa/:appointmentId", guestAuth, async (req, res, next) => {
+  try {
+    const { appointmentId } = req.params;
+    // Verify appointment belongs to this guest and is cancellable
+    const { rows } = await pool.query(
+      `SELECT sa.*, ss.name AS service_name
+       FROM spa_appointments sa
+       LEFT JOIN spa_services ss ON ss.id = sa.service_id
+       WHERE sa.id = $1 AND sa.guest_id = $2`,
+      [appointmentId, req.guest.guestId]
+    );
+    if (rows.length === 0) return res.status(404).json({ message: "Appointment not found." });
+    if (rows[0].status !== "SCHEDULED") {
+      return res.status(400).json({ message: `Cannot cancel appointment with status: ${rows[0].status}. Only SCHEDULED appointments can be cancelled.` });
+    }
+    // Update status to CANCELLED
+    await pool.query(
+      `UPDATE spa_appointments SET status = 'CANCELLED' WHERE id = $1`,
+      [appointmentId]
+    );
+    // Notify spa staff
+    try {
+      const guestName = req.guest?.firstName ? `${req.guest.firstName} ${req.guest.lastName}` : "Guest";
+      await notifyByRole(["ADMIN", "MANAGER"],
+        "Spa Appointment Cancelled",
+        `${guestName} cancelled their ${rows[0].service_name || "spa service"} appointment for ${rows[0].appointment_date} at ${rows[0].appointment_time}`,
+        "SPA", "spa_appointment", rows[0].id
+      );
+    } catch (nErr) { console.error("[Notify] Spa cancel error:", nErr.message); }
+    res.json({ message: "Spa appointment cancelled.", appointmentId: Number(appointmentId) });
+  } catch (e) { next(e); }
+});
+
 // Guest: my spa appointments
 app.get("/api/guest/spa/my-appointments", guestAuth, async (req, res, next) => {
   try {
