@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef, createContext, useContext } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
+import ErrorBoundary from "./ErrorBoundary";
 import GuestMobileApp, { GuestProvider } from "./GuestMobileApp";
 import SchedulingPage from "./SchedulingPage";
 import ShiftSwapPage from "./ShiftSwapPage";
@@ -2070,14 +2071,20 @@ function AppRoutes() {
 }
 
 function GuestRoute() {
-  return <GuestProvider><GuestMobileApp /></GuestProvider>;
+  return <ErrorBoundary fallbackTitle="Guest App Error">
+    <GuestProvider><GuestMobileApp /></GuestProvider>
+  </ErrorBoundary>;
 }
 
 export default function App() {
   return <BrowserRouter>
     <Routes>
       <Route path="/guest/*" element={<GuestRoute />} />
-      <Route path="/*" element={<AuthProvider><CurrencyProvider><AppRoutes /></CurrencyProvider></AuthProvider>} />
+      <Route path="/*" element={
+        <ErrorBoundary fallbackTitle="Staff Dashboard Error">
+          <AuthProvider><CurrencyProvider><AppRoutes /></CurrencyProvider></AuthProvider>
+        </ErrorBoundary>
+      } />
     </Routes>
   </BrowserRouter>;
 }
