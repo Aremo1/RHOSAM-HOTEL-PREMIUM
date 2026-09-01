@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, createContext, useContext } from "react";
 import { GuestDigitalKey, GuestRoomControls, GuestExperiences } from "./GuestRoomFeatures";
 import { retryFetch } from "./retryFetch";
+import * as Sentry from "@sentry/react";
 import {
   Crown, KeyRound, BedDouble, Clock3, Star, Phone, Mail, MapPin, Wifi,
   ChevronRight, ChevronLeft, CheckCircle2, XCircle, AlertTriangle, Plus,
@@ -39,13 +40,16 @@ function GuestProvider({ children }) {
   }, []);
 
   const login = useCallback(async (confirmationNumber, lastName) => {
-    const r = await retryFetch(`${API}/guest/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ confirmationNumber, lastName }) });
-    const t = await r.text(); let d = {}; if (t) try { d = JSON.parse(t); } catch { throw new Error(`Server returned non-JSON response (${r.status})`); }
-    if (!r.ok) throw new Error(d.message || `Login failed (${r.status})`);
-    localStorage.setItem("rhosam_guest_token", d.token);
-    localStorage.setItem("rhosam_guest", JSON.stringify(d.guest));
-    localStorage.setItem("rhosam_guest_resv", JSON.stringify(d.reservation));
-    setGuest(d.guest); setReservation(d.reservation); return d;
+    return Sentry.startSpan({ name: "guest.login", op: "guest.login" }, async (span) => {
+      const r = await retryFetch(`${API}/guest/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ confirmationNumber, lastName }) });
+      span.setAttribute("http.status_code", r.status);
+      const t = await r.text(); let d = {}; if (t) try { d = JSON.parse(t); } catch { throw new Error(`Server returned non-JSON response (${r.status})`); }
+      if (!r.ok) throw new Error(d.message || `Login failed (${r.status})`);
+      localStorage.setItem("rhosam_guest_token", d.token);
+      localStorage.setItem("rhosam_guest", JSON.stringify(d.guest));
+      localStorage.setItem("rhosam_guest_resv", JSON.stringify(d.reservation));
+      setGuest(d.guest); setReservation(d.reservation); return d;
+    });
   }, []);
 
   const refreshStay = useCallback(async () => {

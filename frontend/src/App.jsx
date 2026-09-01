@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef, createContext
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import ErrorBoundary from "./ErrorBoundary";
 import { retryFetch } from "./retryFetch";
+import * as Sentry from "@sentry/react";
 import GuestMobileApp, { GuestProvider } from "./GuestMobileApp";
 import SchedulingPage from "./SchedulingPage";
 import ShiftSwapPage from "./ShiftSwapPage";
@@ -87,7 +88,7 @@ function AuthProvider({ children }) {
     request("/notifications").then(d => { setNotifications(d.notifications || []); setUnreadCount(d.unread || 0); }).catch(() => {});
   }, [user]);
 
-  const logout = useCallback(() => { localStorage.removeItem("rhosam_token"); localStorage.removeItem("rhosam_user"); setUser(null); }, []);
+  const logout = useCallback(() => { localStorage.removeItem("rhosam_token"); localStorage.removeItem("rhosam_user"); Sentry.setUser(null); setUser(null); }, []);
 
   const request = useCallback(async (path, opts = {}) => {
     const token = localStorage.getItem("rhosam_token");
@@ -123,10 +124,15 @@ function AuthProvider({ children }) {
   }, []);
 
   const login = useCallback(async (email, password) => {
-    const r = await retryFetch(`${API}/auth/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
-    const t = await r.text(); let d = {}; if (t) try { d = JSON.parse(t); } catch { throw new Error(`Server returned non-JSON response (${r.status})`); }
-    if (!r.ok) throw new Error(d.message || `Login failed (${r.status})`);
-    localStorage.setItem("rhosam_token", d.token); localStorage.setItem("rhosam_user", JSON.stringify(d.user)); setUser(d.user); return d.user;
+    return Sentry.startSpan({ name: "auth.login", op: "user.login" }, async (span) => {
+      const r = await retryFetch(`${API}/auth/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
+      span.setAttribute("http.status_code", r.status);
+      const t = await r.text(); let d = {}; if (t) try { d = JSON.parse(t); } catch { throw new Error(`Server returned non-JSON response (${r.status})`); }
+      if (!r.ok) throw new Error(d.message || `Login failed (${r.status})`);
+      localStorage.setItem("rhosam_token", d.token); localStorage.setItem("rhosam_user", JSON.stringify(d.user)); setUser(d.user);
+      Sentry.setUser({ id: d.user?.id, email: d.user?.email, username: d.user?.name });
+      return d.user;
+    });
   }, []);
 
   const value = useMemo(() => ({

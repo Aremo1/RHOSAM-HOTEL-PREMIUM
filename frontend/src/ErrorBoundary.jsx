@@ -1,4 +1,5 @@
 import React from "react";
+import * as Sentry from "@sentry/react";
 
 /**
  * Global Error Boundary — catches JavaScript errors anywhere in the
@@ -28,7 +29,17 @@ export default class ErrorBoundary extends React.Component {
     this.setState({ errorInfo });
     // Log to console for dev
     console.error("[ErrorBoundary]", error, errorInfo);
-    // External logging callback (e.g. Sentry, LogRocket)
+
+    // Report to Sentry
+    try {
+      Sentry.withScope((scope) => {
+        scope.setExtras({ componentStack: errorInfo.componentStack });
+        scope.setLevel("error");
+        Sentry.captureException(error);
+      });
+    } catch (_) { /* Sentry init may have failed */ }
+
+    // External logging callback (e.g. LogRocket)
     if (typeof this.props.onError === "function") {
       try { this.props.onError(error, errorInfo); } catch (_) {}
     }
