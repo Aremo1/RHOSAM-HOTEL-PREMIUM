@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { retryFetch } from "./retryFetch";
 import {
   CreditCard, X, CheckCircle2, AlertTriangle, Globe, Banknote,
   Smartphone, Building2, Clock3, ArrowRight, Shield, Zap
@@ -50,7 +51,7 @@ export default function PaymentModal({ open, onClose, onPaymentComplete, folioId
     setStep("processing"); setError("");
     try {
       const token = localStorage.getItem("rhosam_token");
-      const r = await fetch("/api/payments/process", {
+      const r = await retryFetch("/api/payments/process", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ folioId, reservationId, amount: Number(amount), currency, gateway, guestEmail: email, guestName, description: description || `Payment via ${gw.name}` })

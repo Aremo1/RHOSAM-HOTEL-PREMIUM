@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import { retryFetch } from "./retryFetch";
 
 const CurrencyContext = createContext(null);
 export function useCurrency() { return useContext(CurrencyContext); }
@@ -25,7 +26,7 @@ export function CurrencyProvider({ children }) {
   useEffect(() => {
     const token = localStorage.getItem("rhosam_token");
     if (!token) { setLoading(false); return; }
-    fetch("/api/currencies", { headers: { Authorization: `Bearer ${token}` } })
+    retryFetch("/api/currencies", { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.ok ? r.json() : null)
       .then(d => {
         if (d) {

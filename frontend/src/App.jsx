@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef, createContext, useContext } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import ErrorBoundary from "./ErrorBoundary";
+import { retryFetch } from "./retryFetch";
 import GuestMobileApp, { GuestProvider } from "./GuestMobileApp";
 import SchedulingPage from "./SchedulingPage";
 import ShiftSwapPage from "./ShiftSwapPage";
@@ -90,7 +91,7 @@ function AuthProvider({ children }) {
 
   const request = useCallback(async (path, opts = {}) => {
     const token = localStorage.getItem("rhosam_token");
-    const r = await fetch(`${API}${path}`, { ...opts, headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(opts.headers || {}) } });
+    const r = await retryFetch(`${API}${path}`, { ...opts, headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(opts.headers || {}) } });
     if (r.status === 401) logout();
     const t = await r.text(); let d = {}; if (t) try { d = JSON.parse(t); } catch { throw new Error(`Non-JSON (${r.status})`); }
     if (!r.ok) throw new Error(d.message || `Request failed (${r.status})`);
@@ -112,7 +113,7 @@ function AuthProvider({ children }) {
   const dismissToast = useCallback((id) => { setRealtimeToasts(prev => prev.filter(t => t.id !== id)); }, []);
 
   useEffect(() => {
-    fetch(`${API}/auth/me`, { headers: { Authorization: `Bearer ${localStorage.getItem("rhosam_token")}` } })
+    retryFetch(`${API}/auth/me`, { headers: { Authorization: `Bearer ${localStorage.getItem("rhosam_token")}` } })
       .then(async r => {
         const t = await r.text(); if (!t) throw new Error('empty');
         try { return JSON.parse(t); } catch { throw new Error('non-JSON'); }
@@ -122,7 +123,7 @@ function AuthProvider({ children }) {
   }, []);
 
   const login = useCallback(async (email, password) => {
-    const r = await fetch(`${API}/auth/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
+    const r = await retryFetch(`${API}/auth/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
     const t = await r.text(); let d = {}; if (t) try { d = JSON.parse(t); } catch { throw new Error(`Server returned non-JSON response (${r.status})`); }
     if (!r.ok) throw new Error(d.message || `Login failed (${r.status})`);
     localStorage.setItem("rhosam_token", d.token); localStorage.setItem("rhosam_user", JSON.stringify(d.user)); setUser(d.user); return d.user;

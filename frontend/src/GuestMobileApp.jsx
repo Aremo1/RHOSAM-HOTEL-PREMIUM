@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, createContext, useContext } from "react";
 import { GuestDigitalKey, GuestRoomControls, GuestExperiences } from "./GuestRoomFeatures";
+import { retryFetch } from "./retryFetch";
 import {
   Crown, KeyRound, BedDouble, Clock3, Star, Phone, Mail, MapPin, Wifi,
   ChevronRight, ChevronLeft, CheckCircle2, XCircle, AlertTriangle, Plus,
@@ -24,7 +25,7 @@ function GuestProvider({ children }) {
 
   const request = useCallback(async (path, opts = {}) => {
     const token = localStorage.getItem("rhosam_guest_token");
-    const r = await fetch(`${API}${path}`, { ...opts, headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(opts.headers || {}) } });
+    const r = await retryFetch(`${API}${path}`, { ...opts, headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(opts.headers || {}) } });
     if (r.status === 401) logout();
     const t = await r.text(); let d = {}; if (t) try { d = JSON.parse(t); } catch { throw new Error(`Non-JSON (${r.status})`); }
     if (!r.ok) throw new Error(d.message || `Request failed (${r.status})`);
@@ -38,7 +39,7 @@ function GuestProvider({ children }) {
   }, []);
 
   const login = useCallback(async (confirmationNumber, lastName) => {
-    const r = await fetch(`${API}/guest/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ confirmationNumber, lastName }) });
+    const r = await retryFetch(`${API}/guest/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ confirmationNumber, lastName }) });
     const t = await r.text(); let d = {}; if (t) try { d = JSON.parse(t); } catch { throw new Error(`Server returned non-JSON response (${r.status})`); }
     if (!r.ok) throw new Error(d.message || `Login failed (${r.status})`);
     localStorage.setItem("rhosam_guest_token", d.token);
@@ -104,7 +105,7 @@ function PublicLandingPage({ onSwitchToLogin }) {
   useEffect(() => {
     async function safeFetch(url, fallback) {
       try {
-        const r = await fetch(url);
+        const r = await retryFetch(url, {}, { retries: 2, baseDelay: 1000 });
         if (!r.ok) return fallback;
         const t = await r.text(); if (!t) return fallback;
         try { return JSON.parse(t); } catch { return fallback; }
@@ -121,7 +122,7 @@ function PublicLandingPage({ onSwitchToLogin }) {
   async function handleBooking(e) {
     e.preventDefault(); setBookingError(""); setBookingBusy(true);
     try {
-      const r = await fetch("/api/public/book", {
+      const r = await retryFetch("/api/public/book", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...bookingForm, roomTypeId: showBooking.id })
