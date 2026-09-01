@@ -55,8 +55,8 @@ export default function PaymentModal({ open, onClose, onPaymentComplete, folioId
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ folioId, reservationId, amount: Number(amount), currency, gateway, guestEmail: email, guestName, description: description || `Payment via ${gw.name}` })
       });
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.message);
+      const t = await r.text(); let d = {}; if (t) try { d = JSON.parse(t); } catch { throw new Error(`Server returned non-JSON response (${r.status})`); }
+      if (!r.ok) throw new Error(d.message || `Payment failed (${r.status})`);
       setResult(d.transaction);
       setStep("success");
       if (onPaymentComplete) onPaymentComplete(d.transaction);

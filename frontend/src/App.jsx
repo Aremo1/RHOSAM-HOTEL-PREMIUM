@@ -110,11 +110,20 @@ function AuthProvider({ children }) {
 
   const dismissToast = useCallback((id) => { setRealtimeToasts(prev => prev.filter(t => t.id !== id)); }, []);
 
-  useEffect(() => { fetch(`${API}/auth/me`, { headers: { Authorization: `Bearer ${localStorage.getItem("rhosam_token")}` } }).then(r => r.ok ? r.json() : Promise.reject()).then(d => { setUser(d.user); localStorage.setItem("rhosam_user", JSON.stringify(d.user)); }).catch(logout).finally(() => setLoading(false)); }, []);
+  useEffect(() => {
+    fetch(`${API}/auth/me`, { headers: { Authorization: `Bearer ${localStorage.getItem("rhosam_token")}` } })
+      .then(async r => {
+        const t = await r.text(); if (!t) throw new Error('empty');
+        try { return JSON.parse(t); } catch { throw new Error('non-JSON'); }
+      })
+      .then(d => { setUser(d.user); localStorage.setItem("rhosam_user", JSON.stringify(d.user)); })
+      .catch(logout).finally(() => setLoading(false));
+  }, []);
 
   const login = useCallback(async (email, password) => {
     const r = await fetch(`${API}/auth/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
-    const d = await r.json(); if (!r.ok) throw new Error(d.message);
+    const t = await r.text(); let d = {}; if (t) try { d = JSON.parse(t); } catch { throw new Error(`Server returned non-JSON response (${r.status})`); }
+    if (!r.ok) throw new Error(d.message || `Login failed (${r.status})`);
     localStorage.setItem("rhosam_token", d.token); localStorage.setItem("rhosam_user", JSON.stringify(d.user)); setUser(d.user); return d.user;
   }, []);
 

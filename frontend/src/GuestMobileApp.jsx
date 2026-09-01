@@ -39,7 +39,8 @@ function GuestProvider({ children }) {
 
   const login = useCallback(async (confirmationNumber, lastName) => {
     const r = await fetch(`${API}/guest/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ confirmationNumber, lastName }) });
-    const d = await r.json(); if (!r.ok) throw new Error(d.message);
+    const t = await r.text(); let d = {}; if (t) try { d = JSON.parse(t); } catch { throw new Error(`Server returned non-JSON response (${r.status})`); }
+    if (!r.ok) throw new Error(d.message || `Login failed (${r.status})`);
     localStorage.setItem("rhosam_guest_token", d.token);
     localStorage.setItem("rhosam_guest", JSON.stringify(d.guest));
     localStorage.setItem("rhosam_guest_resv", JSON.stringify(d.reservation));
@@ -101,9 +102,17 @@ function PublicLandingPage({ onSwitchToLogin }) {
   const [dark, setDark] = useState(false);
 
   useEffect(() => {
+    async function safeFetch(url, fallback) {
+      try {
+        const r = await fetch(url);
+        if (!r.ok) return fallback;
+        const t = await r.text(); if (!t) return fallback;
+        try { return JSON.parse(t); } catch { return fallback; }
+      } catch { return fallback; }
+    }
     Promise.all([
-      fetch("/api/public/hotel-info").then(r => r.ok ? r.json() : ({})),
-      fetch("/api/public/room-types").then(r => r.ok ? r.json() : [])
+      safeFetch("/api/public/hotel-info", {}),
+      safeFetch("/api/public/room-types", [])
     ]).then(([info, rooms]) => { setHotelInfo(info); setRoomTypes(rooms); })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -117,8 +126,8 @@ function PublicLandingPage({ onSwitchToLogin }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...bookingForm, roomTypeId: showBooking.id })
       });
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.message);
+      const t = await r.text(); let d = {}; if (t) try { d = JSON.parse(t); } catch { throw new Error(`Server returned non-JSON response (${r.status})`); }
+      if (!r.ok) throw new Error(d.message || `Booking failed (${r.status})`);
       setBookingResult(d);
     } catch (err) { setBookingError(err.message); }
     finally { setBookingBusy(false); }

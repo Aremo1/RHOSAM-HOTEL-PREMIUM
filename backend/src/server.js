@@ -5158,6 +5158,13 @@ app.get("/api/guest/payments/gateway-status", guestAuth, async (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════
+// 404 HANDLER — always return JSON for API routes
+// ═══════════════════════════════════════════════════════════════════
+app.use("/api", (req, res) => {
+  res.status(404).json({ message: `Route not found: ${req.method} ${req.originalUrl}` });
+});
+
+// ═══════════════════════════════════════════════════════════════════
 // ERROR HANDLER
 // ═══════════════════════════════════════════════════════════════════
 app.use((err, req, res, _next) => {
