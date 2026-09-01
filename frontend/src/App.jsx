@@ -8,6 +8,7 @@ import SchedulingPage from "./SchedulingPage";
 import ShiftSwapPage from "./ShiftSwapPage";
 import { CurrencyProvider, useCurrency } from "./CurrencyContext";
 import PaymentModal from "./PaymentModal";
+import StatusMonitor from "./StatusMonitor";
 import { DEFAULT_SOUNDS, TONE_PRESETS, playNotificationSound, previewTone, previewTypeSound, getSoundPreferences, saveSoundPreferences, getMasterVolume, setMasterVolume, isSoundEnabled, setSoundEnabled } from "./NotificationSounds";
 import {
   LayoutDashboard, CalendarDays, BedDouble, Users, ClipboardCheck, Wrench,
@@ -17,7 +18,7 @@ import {
   Sparkles, UtensilsCrossed, Settings, Eye, Edit, Trash2, Filter, Phone,
   Mail, Globe, Award, TrendingUp, BarChart3, Calendar, AlertTriangle,
   Check, XCircle, ChefHat, Flower2, PartyPopper, FileText, Lock, LogOut,
-  Building2, MapPin, Wallet, Receipt, Users2, GraduationCap, Heart, ArrowLeftRight
+  Building2, MapPin, Wallet, Receipt, Users2, GraduationCap, Heart, ArrowLeftRight, WifiOff
 } from "lucide-react";
 import {
   AreaChart, Area, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis,
@@ -364,6 +365,7 @@ function Layout({ children }) {
                 {!searchResults.guests?.length && !searchResults.rooms?.length && !searchResults.reservations?.length && <div className="p-6 text-center text-sm text-slate-400">No results found</div>}
               </div>}
             </div>
+            <StatusMonitor />
             <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition" onClick={() => setDark(!dark)}>{dark ? <Sun size={19}/> : <Moon size={19}/>}</button>
             <CurrencySelector />
             {/* Notification Bell + Dropdown */}
@@ -404,6 +406,12 @@ function Layout({ children }) {
               <div className="leading-tight"><div className="text-sm font-medium">{user?.name || "Admin"}</div><div className="text-xs text-slate-500">{user?.role?.replace("_", " ")}</div></div>
             </div>
           </header>
+          {/* Offline Banner */}
+          {!navigator.onLine && (
+            <div className="bg-amber-500 text-white text-center text-sm py-2 px-4 font-medium flex items-center justify-center gap-2">
+              <WifiOff size={14} /> You are offline — some features may be unavailable
+            </div>
+          )}
           <div className="page">{children}</div>
         </main>
       </div>

@@ -308,13 +308,127 @@ app.use(compression());
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 
-// Health check endpoint for Render deployment
+// ── Health Check & Status ──────────────────────────────────────
+const SERVER_START_TIME = Date.now();
+
 app.get("/api/health", async (req, res) => {
+  const checks = {};
+  let overallStatus = "ok";
+
+  // 1. Database connectivity + latency
+  const dbStart = Date.now();
   try {
     await pool.query("SELECT 1");
-    res.json({ status: "ok", timestamp: new Date().toISOString(), database: "connected" });
+    checks.database = { status: "ok", latencyMs: Date.now() - dbStart };
   } catch (e) {
-    res.status(503).json({ status: "error", database: "disconnected", error: e.message });
+    checks.database = { status: "error", error: e.message };
+    overallStatus = "degraded";
+  }
+
+  // 2. Database pool stats
+  try {
+    checks.pool = {
+      total: pool.totalCount,
+      idle: pool.idleCount,
+      waiting: pool.waitingCount,
+      max: pool.options.max,
+    };
+  } catch (_) {}
+
+  // 3. Memory usage (heap)
+  const mem = process.memoryUsage();
+  checks.memory = {
+    heapUsedMB: Math.round(mem.heapUsed / 1024 / 1024),
+    heapTotalMB: Math.round(mem.heapTotal / 1024 / 1024),
+    rssMB: Math.round(mem.rss / 1024 / 1024),
+    externalMB: Math.round(mem.external / 1024 / 1024),
+  };
+
+  // 4. Uptime
+  const uptimeSec = Math.floor((Date.now() - SERVER_START_TIME) / 1000);
+  checks.uptime = {
+    seconds: uptimeSec,
+    formatted: formatUptime(uptimeSec),
+  };
+
+  // 5. WebSocket connections
+  checks.websocket = {
+    connectedClients: wss.clients.size,
+    registeredUsers: wsClients.size,
+  };
+
+  // 6. Environment
+  checks.environment = process.env.NODE_ENV || "development";
+
+  const response = {
+    status: overallStatus,
+    version: process.env.npm_package_version || "1.0.0",
+    timestamp: new Date().toISOString(),
+    checks,
+  };
+
+  res.status(overallStatus === "ok" ? 200 : 503).json(response);
+});
+
+function formatUptime(seconds) {
+  const d = Math.floor(seconds / 86400);
+  const h = Math.floor((seconds % 86400) / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  const parts = [];
+  if (d) parts.push(`${d}d`);
+  if (h) parts.push(`${h}h`);
+  if (m) parts.push(`${m}m`);
+  parts.push(`${s}s`);
+  return parts.join(" ");
+}
+
+// Detailed status (admin only)
+app.get("/api/status", auth, allow("ADMIN"), async (req, res) => {
+  try {
+    // Room stats
+    const { rows: roomStats } = await pool.query(
+      `SELECT status, COUNT(*)::int AS count FROM rooms WHERE is_active=TRUE GROUP BY status`
+    );
+
+    // Reservation stats
+    const { rows: resvStats } = await pool.query(
+      `SELECT status, COUNT(*)::int AS count FROM reservations GROUP BY status`
+    );
+
+    // Guest count
+    const { rows: guestCount } = await pool.query(
+      `SELECT COUNT(*)::int AS total FROM guests`
+    );
+
+    // Today's activity
+    const today = new Date().toISOString().split("T")[0];
+    const { rows: todayCheckins } = await pool.query(
+      `SELECT COUNT(*)::int AS count FROM reservations WHERE check_in::date = $1 AND status IN ('CONFIRMED','CHECKED_IN')`, [today]
+    );
+    const { rows: todayCheckouts } = await pool.query(
+      `SELECT COUNT(*)::int AS count FROM reservations WHERE check_out::date = $1 AND status IN ('CHECKED_IN')`, [today]
+    );
+    const { rows: todayRevenue } = await pool.query(
+      `SELECT COALESCE(SUM(amount), 0)::numeric AS total FROM payments WHERE DATE(created_at) = $1`, [today]
+    );
+
+    res.json({
+      rooms: roomStats,
+      reservations: resvStats,
+      guests: guestCount[0]?.total || 0,
+      today: {
+        checkins: todayCheckins[0]?.count || 0,
+        checkouts: todayCheckouts[0]?.count || 0,
+        revenue: Number(todayRevenue[0]?.total || 0),
+      },
+      websocket: {
+        connectedClients: wss.clients.size,
+        registeredUsers: wsClients.size,
+      },
+    });
+  } catch (e) {
+    res.status(500).json({ message: "Failed to fetch status." });
   }
 });
 
