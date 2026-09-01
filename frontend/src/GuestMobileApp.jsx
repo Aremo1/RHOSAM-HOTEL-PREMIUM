@@ -86,9 +86,205 @@ function MobileNav({ active, onNavigate }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
+// PUBLIC LANDING PAGE (Visitors before booking)
+// ═══════════════════════════════════════════════════════════════════
+function PublicLandingPage({ onSwitchToLogin }) {
+  const [hotelInfo, setHotelInfo] = useState(null);
+  const [roomTypes, setRoomTypes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showBooking, setShowBooking] = useState(null); // roomType to book
+  const [bookingForm, setBookingForm] = useState({ firstName: "", lastName: "", email: "", phone: "", nationality: "", checkIn: "", checkOut: "", adults: 1, children: 0, specialRequests: "" });
+  const [bookingResult, setBookingResult] = useState(null);
+  const [bookingError, setBookingError] = useState("");
+  const [bookingBusy, setBookingBusy] = useState(false);
+  const [activeSection, setActiveSection] = useState("hero");
+  const [dark, setDark] = useState(false);
+
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/public/hotel-info").then(r => r.ok ? r.json() : ({})),
+      fetch("/api/public/room-types").then(r => r.ok ? r.json() : [])
+    ]).then(([info, rooms]) => { setHotelInfo(info); setRoomTypes(rooms); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  async function handleBooking(e) {
+    e.preventDefault(); setBookingError(""); setBookingBusy(true);
+    try {
+      const r = await fetch("/api/public/book", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...bookingForm, roomTypeId: showBooking.id })
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.message);
+      setBookingResult(d);
+    } catch (err) { setBookingError(err.message); }
+    finally { setBookingBusy(false); }
+  }
+
+  if (loading) return <div className="min-h-screen bg-gradient-to-br from-navy-950 via-navy-900 to-navy-950 flex items-center justify-center"><div className="text-brand-300 flex items-center gap-2"><div className="h-5 w-5 border-2 border-brand-400 border-t-transparent rounded-full animate-spin"/> Loading…</div></div>;
+
+  const amenityIcons = { wifi: Wifi, utensils: UtensilsCrossed, spa: Flower2, pool: Waves, gym: Dumbbell, concierge: Bell };
+
+  // Booking confirmation screen
+  if (bookingResult) {
+    return <div className="min-h-screen bg-gradient-to-br from-navy-950 via-navy-900 to-navy-950 flex flex-col items-center justify-center p-6 text-center">
+      <div className="h-20 w-20 rounded-full bg-emerald-500/20 grid place-items-center mb-6"><CheckCircle2 size={40} className="text-emerald-400"/></div>
+      <h1 className="text-2xl font-bold text-white mb-2">Booking Confirmed!</h1>
+      <p className="text-slate-400 mb-6">Your reservation has been successfully created.</p>
+      <div className="bg-navy-900/80 rounded-2xl p-6 border border-white/10 w-full max-w-sm space-y-3">
+        <div className="flex justify-between text-sm"><span className="text-slate-400">Confirmation #</span><span className="text-brand-300 font-mono font-bold text-lg">{bookingResult.confirmationNumber}</span></div>
+        <div className="flex justify-between text-sm"><span className="text-slate-400">Check-in</span><span className="text-white">{bookingResult.reservation.checkIn}</span></div>
+        <div className="flex justify-between text-sm"><span className="text-slate-400">Check-out</span><span className="text-white">{bookingResult.reservation.checkOut}</span></div>
+        <div className="flex justify-between text-sm"><span className="text-slate-400">Total</span><span className="text-white font-semibold">₦{Number(bookingResult.reservation.totalAmount).toLocaleString()}</span></div>
+      </div>
+      <div className="bg-navy-800/50 rounded-2xl p-4 border border-brand-400/20 w-full max-w-sm mt-4">
+        <p className="text-brand-300 text-sm font-medium mb-2">📱 How to access your stay:</p>
+        <p className="text-slate-400 text-xs">Use confirmation number <span className="text-white font-mono">{bookingResult.confirmationNumber}</span> and your last name to sign in at <span className="text-brand-300">/guest</span></p>
+      </div>
+      <button onClick={() => { setBookingResult(null); setShowBooking(null); setBookingForm({ firstName: "", lastName: "", email: "", phone: "", nationality: "", checkIn: "", checkOut: "", adults: 1, children: 0, specialRequests: "" }); }} className="mt-6 text-brand-300 text-sm hover:underline">← Back to rooms</button>
+      <button onClick={onSwitchToLogin} className="mt-2 text-slate-500 text-xs hover:text-slate-300">Already have a booking? Sign in</button>
+    </div>;
+  }
+
+  // Booking form modal
+  if (showBooking) {
+    const nights = bookingForm.checkIn && bookingForm.checkOut ? Math.max(1, Math.ceil((new Date(bookingForm.checkOut) - new Date(bookingForm.checkIn)) / 86400000)) : 0;
+    const total = nights * Number(showBooking.base_rate);
+    return <div className="min-h-screen bg-gradient-to-br from-navy-950 via-navy-900 to-navy-950 p-6">
+      <button onClick={() => setShowBooking(null)} className="text-slate-400 text-sm mb-6 flex items-center gap-1"><ChevronLeft size={16}/> Back to rooms</button>
+      <div className="max-w-sm mx-auto">
+        <div className="text-center mb-6">
+          <h2 className="text-xl font-bold text-white">Book {showBooking.name}</h2>
+          <p className="text-slate-400 text-sm mt-1">₦{Number(showBooking.base_rate).toLocaleString()} / night</p>
+        </div>
+        <form onSubmit={handleBooking} className="space-y-4">
+          {bookingError && <div className="bg-rose-500/10 border border-rose-500/20 text-rose-300 text-sm p-3 rounded-2xl">{bookingError}</div>}
+          <div className="grid grid-cols-2 gap-3">
+            <div><label className="text-xs text-slate-400 mb-1 block">First Name *</label><input className="w-full h-10 px-3 bg-navy-950/80 border border-slate-700 rounded-xl text-white text-sm focus:ring-2 focus:ring-brand-400/50" value={bookingForm.firstName} onChange={e => setBookingForm({...bookingForm, firstName: e.target.value})} required/></div>
+            <div><label className="text-xs text-slate-400 mb-1 block">Last Name *</label><input className="w-full h-10 px-3 bg-navy-950/80 border border-slate-700 rounded-xl text-white text-sm focus:ring-2 focus:ring-brand-400/50" value={bookingForm.lastName} onChange={e => setBookingForm({...bookingForm, lastName: e.target.value})} required/></div>
+          </div>
+          <div><label className="text-xs text-slate-400 mb-1 block">Email *</label><input type="email" className="w-full h-10 px-3 bg-navy-950/80 border border-slate-700 rounded-xl text-white text-sm focus:ring-2 focus:ring-brand-400/50" value={bookingForm.email} onChange={e => setBookingForm({...bookingForm, email: e.target.value})} required/></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><label className="text-xs text-slate-400 mb-1 block">Phone</label><input className="w-full h-10 px-3 bg-navy-950/80 border border-slate-700 rounded-xl text-white text-sm focus:ring-2 focus:ring-brand-400/50" value={bookingForm.phone} onChange={e => setBookingForm({...bookingForm, phone: e.target.value})}/></div>
+            <div><label className="text-xs text-slate-400 mb-1 block">Nationality</label><input className="w-full h-10 px-3 bg-navy-950/80 border border-slate-700 rounded-xl text-white text-sm focus:ring-2 focus:ring-brand-400/50" value={bookingForm.nationality} onChange={e => setBookingForm({...bookingForm, nationality: e.target.value})}/></div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><label className="text-xs text-slate-400 mb-1 block">Check-in *</label><input type="date" className="w-full h-10 px-3 bg-navy-950/80 border border-slate-700 rounded-xl text-white text-sm focus:ring-2 focus:ring-brand-400/50" value={bookingForm.checkIn} onChange={e => setBookingForm({...bookingForm, checkIn: e.target.value})} required/></div>
+            <div><label className="text-xs text-slate-400 mb-1 block">Check-out *</label><input type="date" className="w-full h-10 px-3 bg-navy-950/80 border border-slate-700 rounded-xl text-white text-sm focus:ring-2 focus:ring-brand-400/50" value={bookingForm.checkOut} onChange={e => setBookingForm({...bookingForm, checkOut: e.target.value})} required/></div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><label className="text-xs text-slate-400 mb-1 block">Adults</label><div className="flex items-center gap-2"><button type="button" className="h-10 w-10 rounded-xl bg-navy-800 border border-slate-700 text-white flex items-center justify-center" onClick={() => setBookingForm({...bookingForm, adults: Math.max(1, bookingForm.adults - 1)})}><Minus size={14}/></button><span className="text-white font-medium w-8 text-center">{bookingForm.adults}</span><button type="button" className="h-10 w-10 rounded-xl bg-navy-800 border border-slate-700 text-white flex items-center justify-center" onClick={() => setBookingForm({...bookingForm, adults: Math.min(10, bookingForm.adults + 1)})}><Plus size={14}/></button></div></div>
+            <div><label className="text-xs text-slate-400 mb-1 block">Children</label><div className="flex items-center gap-2"><button type="button" className="h-10 w-10 rounded-xl bg-navy-800 border border-slate-700 text-white flex items-center justify-center" onClick={() => setBookingForm({...bookingForm, children: Math.max(0, bookingForm.children - 1)})}><Minus size={14}/></button><span className="text-white font-medium w-8 text-center">{bookingForm.children}</span><button type="button" className="h-10 w-10 rounded-xl bg-navy-800 border border-slate-700 text-white flex items-center justify-center" onClick={() => setBookingForm({...bookingForm, children: Math.min(6, bookingForm.children + 1)})}><Plus size={14}/></button></div></div>
+          </div>
+          <div><label className="text-xs text-slate-400 mb-1 block">Special Requests</label><textarea className="w-full h-20 px-3 bg-navy-950/80 border border-slate-700 rounded-xl text-white text-sm focus:ring-2 focus:ring-brand-400/50 resize-none" value={bookingForm.specialRequests} onChange={e => setBookingForm({...bookingForm, specialRequests: e.target.value})} placeholder="Any preferences or requests…"/></div>
+          {nights > 0 && <div className="bg-navy-800/50 rounded-xl p-4 border border-white/5 space-y-2">
+            <div className="flex justify-between text-sm"><span className="text-slate-400">{nights} night{nights > 1 ? 's' : ''} × ₦{Number(showBooking.base_rate).toLocaleString()}</span><span className="text-white font-semibold">₦{total.toLocaleString()}</span></div>
+          </div>}
+          <button type="submit" disabled={bookingBusy} className="w-full h-12 rounded-xl bg-gradient-to-r from-brand-400 to-brand-500 hover:from-brand-300 hover:to-brand-400 text-navy-950 font-semibold text-sm transition disabled:opacity-50">
+            {bookingBusy ? "Booking…" : "Confirm Booking"}
+          </button>
+        </form>
+      </div>
+    </div>;
+  }
+
+  // Main landing page
+  return <div className="min-h-screen bg-gradient-to-br from-navy-950 via-navy-900 to-navy-950">
+    {/* Header */}
+    <div className="flex items-center justify-between p-4">
+      <div className="flex items-center gap-2">
+        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-brand-300 to-brand-500 grid place-items-center text-navy-950"><Crown size={20}/></div>
+        <div><h1 className="text-white font-bold text-sm">RHoSAM Hotel</h1><p className="text-brand-300 text-[10px] tracking-[.2em]">HOTEL & SUITES</p></div>
+      </div>
+      <div className="flex items-center gap-2">
+        <button className="p-2 rounded-xl bg-white/10 text-white/60" onClick={() => setDark(!dark)}>{dark ? <Sun size={16}/> : <Moon size={16}/>}</button>
+        <button onClick={onSwitchToLogin} className="px-3 py-1.5 rounded-xl bg-brand-400/10 text-brand-300 text-xs font-medium border border-brand-400/20">Sign In</button>
+      </div>
+    </div>
+
+    {/* Hero */}
+    <div className="px-6 py-12 text-center">
+      <h2 className="text-3xl font-bold text-white mb-3">Welcome to<br/><span className="text-brand-300">RHoSAM Hotel</span></h2>
+      <p className="text-slate-400 text-sm max-w-xs mx-auto">{hotelInfo?.description?.slice(0, 120) || 'Experience world-class hospitality and luxury accommodations.'}…</p>
+    </div>
+
+    {/* Features */}
+    {hotelInfo?.features && <div className="px-4 pb-8">
+      <div className="grid grid-cols-3 gap-3">
+        {hotelInfo.features.map((f, i) => {
+          const Icon = amenityIcons[f.icon] || Star;
+          return <div key={i} className="bg-navy-900/50 rounded-xl p-3 border border-white/5 text-center">
+            <Icon size={20} className="text-brand-300 mx-auto mb-1.5"/>
+            <p className="text-white text-[11px] font-medium leading-tight">{f.title}</p>
+          </div>;
+        })}
+      </div>
+    </div>}
+
+    {/* Room Types */}
+    <div className="px-4 pb-24">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-bold text-white">Rooms & Suites</h3>
+        <span className="text-xs text-slate-500">{roomTypes.length} types</span>
+      </div>
+      <div className="space-y-4">
+        {roomTypes.map(rt => <div key={rt.id} className="bg-navy-900/80 rounded-2xl border border-white/5 overflow-hidden">
+          <div className="p-4">
+            <div className="flex items-start justify-between">
+              <div>
+                <h4 className="text-white font-semibold">{rt.name}</h4>
+                <p className="text-slate-400 text-xs mt-1 line-clamp-2">{rt.description || 'Premium accommodation with modern amenities.'}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-brand-300 font-bold text-lg">₦{Number(rt.base_rate).toLocaleString()}</p>
+                <p className="text-slate-500 text-[10px]">/night</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 mt-3 text-xs text-slate-400">
+              <span className="flex items-center gap-1"><Users size={12}/> Max {rt.max_occupancy}</span>
+              <span className="flex items-center gap-1"><BedDouble size={12}/> {rt.available_rooms || 0} available</span>
+            </div>
+            {rt.amenities && rt.amenities.length > 0 && <div className="flex flex-wrap gap-1.5 mt-3">
+              {rt.amenities.slice(0, 4).map((a, i) => <span key={i} className="px-2 py-0.5 bg-white/5 rounded-full text-[10px] text-slate-400">{a}</span>)}
+              {rt.amenities.length > 4 && <span className="px-2 py-0.5 bg-white/5 rounded-full text-[10px] text-slate-400">+{rt.amenities.length - 4}</span>}
+            </div>}
+            <button onClick={() => { setShowBooking(rt); setBookingForm(prev => ({...prev, firstName: "", lastName: "", email: "", phone: "", nationality: "", specialRequests: "" })); }} className="w-full mt-4 h-10 rounded-xl bg-gradient-to-r from-brand-400 to-brand-500 hover:from-brand-300 hover:to-brand-400 text-navy-950 font-semibold text-sm transition">
+              Book Now — ₦{Number(rt.base_rate).toLocaleString()}/night
+            </button>
+          </div>
+        </div>)}
+      </div>
+
+      {/* Sign-in CTA */}
+      <div className="mt-8 bg-navy-900/50 rounded-2xl p-5 border border-white/5 text-center">
+        <KeyRound size={24} className="text-brand-300 mx-auto mb-2"/>
+        <h4 className="text-white font-semibold text-sm mb-1">Already have a booking?</h4>
+        <p className="text-slate-400 text-xs mb-3">Sign in with your confirmation number to manage your stay.</p>
+        <button onClick={onSwitchToLogin} className="px-6 py-2 rounded-xl bg-white/10 text-white text-sm font-medium border border-white/10 hover:bg-white/20 transition">
+          Guest Sign In
+        </button>
+      </div>
+
+      {/* Contact */}
+      <div className="mt-6 text-center space-y-2 pb-4">
+        <p className="text-slate-500 text-xs">{hotelInfo?.address}</p>
+        <div className="flex items-center justify-center gap-4 text-xs">
+          <a href={`tel:${hotelInfo?.phone}`} className="text-brand-300 flex items-center gap-1"><Phone size={12}/> {hotelInfo?.phone}</a>
+          <a href={`mailto:${hotelInfo?.email}`} className="text-brand-300 flex items-center gap-1"><Mail size={12}/> Email</a>
+        </div>
+        <p className="text-slate-600 text-[10px]">© {new Date().getFullYear()} RHoSAM Hotel & Suites. All rights reserved.</p>
+      </div>
+    </div>
+  </div>;
+}
+
+// ═══════════════════════════════════════════════════════════════════
 // LOGIN SCREEN
 // ═══════════════════════════════════════════════════════════════════
-function GuestLogin() {
+function GuestLogin({ onSwitchToLanding }) {
   const { login } = useGuest();
   const [conf, setConf] = useState(""); const [lastName, setLastName] = useState("");
   const [error, setError] = useState(""); const [busy, setBusy] = useState(false);
@@ -125,6 +321,7 @@ function GuestLogin() {
         </button>
       </form>
       <p className="text-slate-600 text-xs mt-6 text-center max-w-xs">Find your confirmation number in your booking email from RHoSAM Hotel.</p>
+      <button onClick={onSwitchToLanding} className="mt-4 text-brand-300 text-sm hover:underline flex items-center gap-1"><Globe size={14}/> Browse Rooms & Book</button>
     </div>
   </div>;
 }
@@ -677,19 +874,24 @@ export { GuestProvider };
 export default function GuestMobileApp() {
   const { guest, loading } = useGuest();
   const [screen, setScreen] = useState("home");
-  const [dark, setDark] = useState(false);
+  const [view, setView] = useState("landing"); // landing | login | app
 
   // Expose navigate for home screen quick actions
   useEffect(() => { window.__guestNavigate = setScreen; return () => { delete window.__guestNavigate; }; }, []);
 
   if (loading) return <div className="min-h-screen bg-navy-950 flex items-center justify-center flex-col gap-4"><div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-brand-300 to-brand-500 grid place-items-center text-navy-950 animate-pulse"><Crown size={28}/></div><div className="text-brand-300">Loading…</div></div>;
-  if (!guest) return <GuestLogin />;
 
-  const screens = { home: GuestHome, key: GuestDigitalKey, experiences: GuestExperiences, services: GuestRoomService, controls: GuestRoomControls, concierge: GuestConcierge, spa: GuestSpa, profile: GuestProfile };
-  const Screen = screens[screen] || GuestHome;
+  // If logged in, show the app
+  if (guest) {
+    const screens = { home: GuestHome, key: GuestDigitalKey, experiences: GuestExperiences, services: GuestRoomService, controls: GuestRoomControls, concierge: GuestConcierge, spa: GuestSpa, profile: GuestProfile };
+    const Screen = screens[screen] || GuestHome;
+    return <div className={`min-h-screen bg-[#f5f7fb] dark:bg-navy-950 text-slate-800 dark:text-slate-100 max-w-lg mx-auto relative`}>
+      <Screen />
+      <MobileNav active={screen} onNavigate={setScreen} />
+    </div>;
+  }
 
-  return <div className={`min-h-screen ${dark ? "dark" : ""} bg-[#f5f7fb] dark:bg-navy-950 text-slate-800 dark:text-slate-100 max-w-lg mx-auto relative`}>
-    <Screen />
-    <MobileNav active={screen} onNavigate={setScreen} />
-  </div>;
+  // Not logged in: show landing or login
+  if (view === "login") return <GuestLogin onSwitchToLanding={() => setView("landing")} />;
+  return <PublicLandingPage onSwitchToLogin={() => setView("login")} />;
 }

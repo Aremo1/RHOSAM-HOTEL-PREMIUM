@@ -3856,6 +3856,168 @@ app.get("/api/search", auth, async (req, res, next) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════
+// PUBLIC API (No auth — for visitors before booking)
+// ═══════════════════════════════════════════════════════════════════
+
+// Public: hotel info for landing page
+app.get("/api/public/hotel-info", async (_req, res, next) => {
+  try {
+    res.json({
+      name: "RHoSAM Hotel & Suites",
+      tagline: "Premium Hotel Management Platform",
+      description: "Experience world-class hospitality at RHoSAM Hotel & Suites. Our premium accommodations blend modern luxury with exceptional service, offering an unforgettable stay in the heart of the city.",
+      phone: "+234 800 RHoSAM",
+      email: "reservations@rhosamhotel.com",
+      address: "123 Luxury Avenue, Victoria Island, Lagos, Nigeria",
+      features: [
+        { icon: "wifi", title: "Free High-Speed WiFi", description: "Complimentary WiFi throughout the property" },
+        { icon: "utensils", title: "Fine Dining", description: "Award-winning restaurant and 24/7 room service" },
+        { icon: "spa", title: "Luxury Spa", description: "Full-service spa and wellness center" },
+        { icon: "pool", title: "Infinity Pool", description: "Rooftop infinity pool with city views" },
+        { icon: "gym", title: "Fitness Center", description: "State-of-the-art gym equipment" },
+        { icon: "concierge", title: "24/7 Concierge", description: "Personal concierge service for every guest" }
+      ]
+    });
+  } catch (e) { next(e); }
+});
+
+// Public: list room types (no auth required)
+app.get("/api/public/room-types", async (_req, res, next) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT rt.id, rt.name, rt.description, rt.base_rate, rt.max_occupancy, rt.amenities, rt.image_url,
+              COUNT(r.id) FILTER(WHERE r.is_active=TRUE AND r.status != 'OUT_OF_ORDER') AS total_rooms,
+              COUNT(r.id) FILTER(WHERE r.is_active=TRUE AND r.status = 'AVAILABLE') AS available_rooms
+       FROM room_types rt
+       LEFT JOIN rooms r ON r.room_type_id = rt.id
+       WHERE rt.is_active=TRUE
+       GROUP BY rt.id
+       ORDER BY rt.base_rate`
+    );
+    res.json(rows);
+  } catch (e) { next(e); }
+});
+
+// Public: check availability for dates (no auth required)
+app.get("/api/public/availability", async (req, res, next) => {
+  try {
+    const { checkIn, checkOut, roomTypeId } = req.query;
+    if (!checkIn || !checkOut) return res.status(400).json({ message: "checkIn and checkOut dates required." });
+    let sql = `
+      SELECT r.number, r.floor, r.status, rt.name AS type_name, rt.base_rate, rt.amenities, rt.id AS room_type_id,
+             CASE WHEN EXISTS (
+               SELECT 1 FROM reservations res
+               WHERE res.room_id=r.id AND res.status IN ('CONFIRMED','CHECKED_IN')
+               AND res.check_in < $2 AND res.check_out > $1
+             ) THEN 'BOOKED' ELSE 'AVAILABLE' END AS availability
+      FROM rooms r
+      LEFT JOIN room_types rt ON rt.id = r.room_type_id
+      WHERE r.is_active=TRUE AND r.status != 'OUT_OF_ORDER'
+    `;
+    const params = [checkIn, checkOut];
+    let idx = 3;
+    if (roomTypeId) { sql += ` AND r.room_type_id=$${idx++}`; params.push(Number(roomTypeId)); }
+    sql += ` ORDER BY rt.base_rate, r.number`;
+    const { rows } = await pool.query(sql, params);
+    const available = rows.filter(r => r.availability === 'AVAILABLE');
+    // Group by room type
+    const grouped = {};
+    for (const r of available) {
+      if (!grouped[r.room_type_id]) grouped[r.room_type_id] = { type: r.type_name, rate: Number(r.base_rate), amenities: r.amenities, rooms: [] };
+      grouped[r.room_type_id].rooms.push({ number: r.number, floor: r.floor });
+    }
+    res.json({ checkIn, checkOut, available: Object.values(grouped) });
+  } catch (e) { next(e); }
+});
+
+// Public: self-service booking (no auth — creates guest + reservation)
+app.post("/api/public/book", async (req, res, next) => {
+  const client = await pool.connect();
+  try {
+    const { firstName, lastName, email, phone, nationality, roomTypeId, checkIn, checkOut, adults, children, specialRequests } = req.body;
+    if (!firstName || !lastName || !email || !checkIn || !checkOut)
+      return res.status(400).json({ message: "Name, email, check-in and check-out dates are required." });
+
+    await client.query("BEGIN");
+
+    // Create or find guest
+    let guestId;
+    const { rows: existingGuest } = await client.query(
+      "SELECT id FROM guests WHERE LOWER(email) = LOWER($1)", [email]
+    );
+    if (existingGuest[0]) {
+      guestId = existingGuest[0].id;
+      // Update phone/nationality if provided
+      if (phone || nationality) {
+        await client.query(
+          "UPDATE guests SET phone=COALESCE($1,phone), nationality=COALESCE($2,nationality) WHERE id=$3",
+          [phone || null, nationality || null, guestId]
+        );
+      }
+    } else {
+      const { rows: newGuest } = await client.query(
+        "INSERT INTO guests(first_name,last_name,email,phone,nationality) VALUES($1,$2,$3,$4,$5) RETURNING id",
+        [firstName, lastName, email, phone || null, nationality || null]
+      );
+      guestId = newGuest[0].id;
+    }
+
+    // Check room availability
+    const nights = Math.max(1, Math.ceil((new Date(checkOut) - new Date(checkIn)) / 86400000));
+    let assignedRoomId = null;
+    let roomRate = 0;
+
+    if (roomTypeId) {
+      const { rows: rt } = await client.query("SELECT base_rate FROM room_types WHERE id=$1", [roomTypeId]);
+      roomRate = Number(rt[0]?.base_rate || 0);
+
+      const { rows: available } = await client.query(
+        `SELECT r.id FROM rooms r WHERE r.room_type_id=$1 AND r.is_active=TRUE AND r.status != 'OUT_OF_ORDER'
+         AND NOT EXISTS (SELECT 1 FROM reservations res WHERE res.room_id=r.id AND res.status IN ('CONFIRMED','CHECKED_IN') AND res.check_in < $3 AND res.check_out > $2)
+         ORDER BY r.number LIMIT 1`,
+        [roomTypeId, checkOut, checkIn]
+      );
+      if (available.length) assignedRoomId = available[0].id;
+    }
+
+    const totalAmount = roomRate * nights;
+    const confirmationNumber = genConfirmation();
+
+    const { rows } = await client.query(
+      `INSERT INTO reservations(confirmation_number,guest_id,room_id,room_type_id,check_in,check_out,adults,children,status,rate,total_amount,special_requests,source,created_by)
+       VALUES($1,$2,$3,$4,$5,$6,$7,$8,'CONFIRMED',$9,$10,$11,$12,$13) RETURNING *`,
+      [confirmationNumber, guestId, assignedRoomId, roomTypeId || null, checkIn, checkOut, adults || 1, children || 0, roomRate, totalAmount, specialRequests || null, "ONLINE", 1]
+    );
+
+    await client.query("INSERT INTO folios(reservation_id, guest_id) VALUES($1, $2)", [rows[0].id, guestId]);
+    await client.query("UPDATE guests SET total_stays = total_stays + 1 WHERE id = $1", [guestId]);
+    if (assignedRoomId) await client.query("UPDATE rooms SET status = 'RESERVED' WHERE id = $1", [assignedRoomId]);
+
+    await audit(pool, null, "CREATE", "RESERVATION", rows[0].id, { confirmationNumber, guestId, checkIn, checkOut, source: "ONLINE" }, req);
+    await client.query("COMMIT");
+
+    res.status(201).json({
+      message: "Booking confirmed!",
+      confirmationNumber,
+      reservation: {
+        id: rows[0].id,
+        confirmationNumber,
+        checkIn: rows[0].check_in,
+        checkOut: rows[0].check_out,
+        adults: rows[0].adults,
+        children: rows[0].children,
+        rate: rows[0].rate,
+        totalAmount: rows[0].total_amount,
+        status: rows[0].status
+      },
+      guest: { firstName, lastName, email },
+      instructions: `Use confirmation number ${confirmationNumber} and your last name (${lastName}) to sign in to the guest portal at /guest`
+    });
+  } catch (e) { await client.query("ROLLBACK").catch(() => {}); next(e); }
+  finally { client.release(); }
+});
+
+// ═══════════════════════════════════════════════════════════════════
 // GUEST-FACING API (Mobile App)
 // ═══════════════════════════════════════════════════════════════════
 // Guest login with confirmation number + last name
